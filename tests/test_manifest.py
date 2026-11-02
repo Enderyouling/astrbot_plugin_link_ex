@@ -26,7 +26,8 @@ class TestMetadata(unittest.TestCase):
 
     def test_name_matches_repo_dir(self):
         m = re.search(r"^name:\s*(\S+)", self.text, re.M)
-        self.assertEqual(m.group(1), "astrbot_plugin_link_preview")
+        self.assertEqual(m.group(1), "astrbot_plugin_link_ex")
+        self.assertIn(f'PLUGIN_NAME = "{m.group(1)}"', read("main.py"))
 
     def test_version_format(self):
         m = re.search(r"^version:\s*(\S+)", self.text, re.M)
