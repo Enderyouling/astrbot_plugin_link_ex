@@ -18,8 +18,8 @@ from astrbot.api.star import Context, Star, StarTools
 
 from . import fetchers, render, wordfilter
 
-HELP = """外链预览
-群里发 YouTube / TikTok / Instagram / X / GitHub / Reddit / Bluesky / pixiv / Steam / 维基百科 / 维基文库 / Dailymotion / niconico / Spotify 等链接，会自动回一张预览卡片（带几条热门评论）。
+HELP = """外链解析 Ex
+群里发 B站 / 抖音 / 小红书 / 微博 / 知乎 / YouTube / TikTok / Instagram / X / GitHub / Reddit / Bluesky / pixiv / Steam / 维基百科 / 维基文库 / Dailymotion / niconico / Spotify 等链接，会自动回一张预览卡片（带几条热门评论）。
 /预览 链接：手动预览任意网页链接（也可用 /preview）
 /评论 [链接]：单独看一条链接的评论，最多 10 条；不带链接时用本群最近预览过的那条（也可用 /comments）
 /翻译 [链接]：出一张带译文的卡片（外语帖子自动预览时已带译文，不用再发这条）
@@ -28,7 +28,7 @@ HELP = """外链预览
 /预览帮助：查看这条帮助
 能拿到评论的平台：YouTube、TikTok、X（需配置浏览器服务，较慢）、GitHub Issue/PR、Bluesky、pixiv。Instagram、Reddit 拿不到评论。"""
 
-PLUGIN_NAME = "astrbot_plugin_link_preview"
+PLUGIN_NAME = "astrbot_plugin_link_ex"
 # 本插件注册的指令和别名，用来把「指令消息」和「普通聊天」区分开
 COMMAND_NAMES = {
     "预览", "preview", "评论", "comments", "看评论",

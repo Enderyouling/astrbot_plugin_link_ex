@@ -1,10 +1,10 @@
-# Ex 外链解析 | Ex_astrbot_plugin_link
+# 外链解析 Ex | astrbot_plugin_link_ex
 
 **EX 版维护：[@Enderyouling](https://github.com/Enderyouling)** · **当前版本：3.0.0**
 
 基于 [EndermanMYR/astrbot_plugin_link_preview](https://github.com/EndermanMYR/astrbot_plugin_link_preview) v2.5.0 的 AstrBot 扩展版本。EX 版新增国内平台预览并加强网络请求安全检查，原作署名与 MIT 许可证保留。
 
-[下载 v3.0.0](https://github.com/Enderyouling/Ex_astrbot_plugin_link/releases/tag/v3.0.0) · [更新记录](CHANGELOG.md) · [向原作提交的 PR](https://github.com/EndermanMYR/astrbot_plugin_link_preview/pull/2)
+[下载 v3.0.0](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.0) · [更新记录](CHANGELOG.md) · [向原作提交的 PR](https://github.com/EndermanMYR/astrbot_plugin_link_preview/pull/2)
 
 > EX 3.0.0 基于 v2.5.0，新增 B站（bilibili）、抖音（douyin）、小红书（xiaohongshu）、微博（weibo）、知乎（zhihu）。
 >
@@ -12,7 +12,7 @@
 >
 > 网络安全：预览和配图仅访问解析到公网 IP 的 HTTP(S) 地址，每次连接（含跳转）固定已验证 IP；不自动使用环境代理，仍支持配置项 proxy。Fake-IP DNS（例如部分 TUN 模式）会被拒绝，需对这些域名使用真实 DNS。管理员配置的 X 内网服务使用独立客户端，不受公网限制。GitHub 私有仓库被拒绝；图片只允许常见位图类型，并在读取时限制大小。正文响应上限 8 MiB。
 >
-> 新增平台可在 platforms 中分别关闭。X 预览不再使用登录态正文降级；评论只采用公开接口能读取的内容，公开接口不可用时会减少评论。正文响应只接受未压缩传输，拒绝不遵守 Accept-Encoding: identity 的响应，以防解压膨胀；这可能影响少数站点。升级保留现有插件数据。
+> 新增平台可在 platforms 中分别关闭。X 预览不再使用登录态正文降级；评论只采用公开接口能读取的内容，公开接口不可用时会减少评论。正文响应只接受未压缩传输，拒绝不遵守 Accept-Encoding: identity 的响应，以防解压膨胀；这可能影响少数站点。原版配置与数据不会自动迁移，切换步骤见安装说明。
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![AstrBot](https://img.shields.io/badge/AstrBot-v4.16%2B-brightgreen)
@@ -28,7 +28,7 @@
       <img width="170" alt="Link Preview logo" src="docs/images/logo.png" style="border-radius: 24px;" />
     </td>
     <td>
-      <strong>Ex · 外链解析</strong><br />
+      <strong>外链解析 · Ex</strong><br />
       B站 · 抖音 · 小红书 · 微博 · 知乎 · YouTube<br />
       <sub>群里发一条链接，回一张排版好的卡片图。</sub>
     </td>
@@ -37,10 +37,10 @@
 
 这是一个为 **AstrBot** 编写的插件：群聊里有人发国内外平台的链接时，自动抓取标题、作者、正文、配图、数据和热门评论，渲染成一张卡片图片发回群里。
 
-[![Stars](https://img.shields.io/github/stars/Enderyouling/Ex_astrbot_plugin_link?color=yellow&label=%E6%A0%87%E6%98%9F)](https://github.com/Enderyouling/Ex_astrbot_plugin_link/stargazers)
-[![Issues](https://img.shields.io/github/issues/Enderyouling/Ex_astrbot_plugin_link?color=darkgreen&label=%E5%8F%8D%E9%A6%88)](https://github.com/Enderyouling/Ex_astrbot_plugin_link/issues)
-[![Pull Requests](https://img.shields.io/github/issues-pr/Enderyouling/Ex_astrbot_plugin_link?color=blue&label=%E8%AF%B7%E6%B1%82)](https://github.com/Enderyouling/Ex_astrbot_plugin_link/pulls)
-[![Last Commit](https://img.shields.io/github/last-commit/Enderyouling/Ex_astrbot_plugin_link?color=blueviolet&label=%E6%9C%80%E8%BF%91%E6%9B%B4%E6%96%B0)](https://github.com/Enderyouling/Ex_astrbot_plugin_link/commits/EX-main)
+[![Stars](https://img.shields.io/github/stars/Enderyouling/astrbot_plugin_link_ex?color=yellow&label=%E6%A0%87%E6%98%9F)](https://github.com/Enderyouling/astrbot_plugin_link_ex/stargazers)
+[![Issues](https://img.shields.io/github/issues/Enderyouling/astrbot_plugin_link_ex?color=darkgreen&label=%E5%8F%8D%E9%A6%88)](https://github.com/Enderyouling/astrbot_plugin_link_ex/issues)
+[![Pull Requests](https://img.shields.io/github/issues-pr/Enderyouling/astrbot_plugin_link_ex?color=blue&label=%E8%AF%B7%E6%B1%82)](https://github.com/Enderyouling/astrbot_plugin_link_ex/pulls)
+[![Last Commit](https://img.shields.io/github/last-commit/Enderyouling/astrbot_plugin_link_ex?color=blueviolet&label=%E6%9C%80%E8%BF%91%E6%9B%B4%E6%96%B0)](https://github.com/Enderyouling/astrbot_plugin_link_ex/commits/EX-main)
 
 > [!IMPORTANT]
 > 卡片渲染走 **AstrBot 自带的文转图服务**（`html_render`），插件不再依赖 Playwright、不用装 Chromium、也不用 Docker。代价是渲染依赖该服务，详见下方「渲染」一节。
@@ -111,14 +111,14 @@
 
 ## 📦 安装 | Installation
 
-从本仓库的 [v3.0.0 发行页](https://github.com/Enderyouling/Ex_astrbot_plugin_link/releases/tag/v3.0.0) 下载源码 ZIP，或在 AstrBot 中使用本仓库地址安装。默认维护分支为 `EX-main`。
+从本仓库的 [v3.0.0 发行页](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.0) 下载源码 ZIP，或在 AstrBot 中使用本仓库地址安装。默认维护分支为 `EX-main`。
 
-插件显示名为 **Ex 外链解析**。为沿用原版配置和数据，内部插件 ID 仍为 `astrbot_plugin_link_preview`；请作为原版的升级替换使用，不要同时安装两份。升级前备份插件配置与数据。
+插件显示名为 **外链解析 Ex**，插件 ID 与仓库名统一为 `astrbot_plugin_link_ex`。从原版切换前请备份配置与数据，并停用原版，避免相同命令和自动预览重复触发。新 ID 使用独立配置与数据目录，不会自动导入旧配置；请在 WebUI 重新填写或导入原配置。需要保留自定义词表和群图片开关时，在停用两版后，将旧目录 `data/plugin_data/astrbot_plugin_link_preview/` 中的自定义词表及 `image_switch.json` 复制到新目录 `data/plugin_data/astrbot_plugin_link_ex/`；目标已有文件时先备份并核对，不要直接覆盖。
 
 将插件目录放入：
 
 ```
-AstrBot/data/plugins/astrbot_plugin_link_preview
+AstrBot/data/plugins/astrbot_plugin_link_ex
 ```
 
 重启 AstrBot 后即可在 WebUI 中看到插件。
@@ -299,7 +299,7 @@ docker compose up -d      # 本地构建，约 10 分钟（主要花在装 chrom
 
 ### 🛡️ 敏感词与分级过滤
 
-- 词表默认放在插件数据目录：`data/plugin_data/astrbot_plugin_link_preview/political.txt`，第一次加载时用插件自带的 `sensitive_words.txt` 创建，之后改这个文件即可，改完立即生效
+- 词表默认放在插件数据目录：`data/plugin_data/astrbot_plugin_link_ex/political.txt`，第一次加载时用插件自带的 `sensitive_words.txt` 创建，之后改这个文件即可，改完立即生效
 - 从旧版本升级时，如果插件数据目录里还没有词表、而旧位置 `data/sensitive_words/political.txt` 存在，会先复制一份过来再继续；旧文件保留不动
 - 想放在别处，把 `block_words_file` 填成绝对路径或相对 AstrBot 工作目录的路径即可
 - 自带词表约 150 个政治敏感词（简繁体），刻意避开了「64」「民主」这类会大量误伤的短词

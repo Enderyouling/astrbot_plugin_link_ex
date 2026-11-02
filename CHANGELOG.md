@@ -1,4 +1,4 @@
-# 3.0.0 — Ex 外链解析
+# 3.0.0 — 外链解析 Ex
 
 EX 版维护与扩展：Enderyouling。基于 ネコの先生 / EndermanMYR 的 v2.5.0，保留 MIT 许可证与原作署名。
 
@@ -21,6 +21,6 @@ EX 版维护与扩展：Enderyouling。基于 ネコの先生 / EndermanMYR 的 
 - 抖音、小红书、微博、知乎仅解析公开元信息，不提供登录绕过、完整 App 内容或评论抓取。
 - 使用 Fake-IP DNS 的网络会被安全检查拒绝，需为相关域名使用真实 DNS。代理通过插件 proxy 配置，环境代理不会自动读取。
 - 平台风控、验证码及公开接口变化可能使预览失败；拒绝压缩响应可能影响少数站点。
-- 内部插件 ID 保持 astrbot_plugin_link_preview，作为原版升级替换安装，勿并装；升级前备份配置与数据。
+- 插件 ID 为 astrbot_plugin_link_ex，使用独立配置与数据目录。切换前备份并停用原版，重新填写或导入配置；自定义词表及群图片开关按 README 手动迁移，不会自动覆盖旧数据。
 
 功能与安全修改已提交原作 PR #2：https://github.com/EndermanMYR/astrbot_plugin_link_preview/pull/2 。EX 品牌与发行信息在 EX-main 分支独立维护。
