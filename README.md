@@ -1,12 +1,18 @@
-> 此分支基于 v2.5.0，新增 B站（bilibili）、抖音（douyin）、小红书（xiaohongshu）、微博（weibo）、知乎（zhihu）。
+# Ex 外链解析 | Ex_astrbot_plugin_link
+
+**EX 版维护：[@Enderyouling](https://github.com/Enderyouling)** · **当前版本：3.0.0**
+
+基于 [EndermanMYR/astrbot_plugin_link_preview](https://github.com/EndermanMYR/astrbot_plugin_link_preview) v2.5.0 的 AstrBot 扩展版本。EX 版新增国内平台预览并加强网络请求安全检查，原作署名与 MIT 许可证保留。
+
+[下载 v3.0.0](https://github.com/Enderyouling/Ex_astrbot_plugin_link/releases/tag/v3.0.0) · [更新记录](CHANGELOG.md) · [向原作提交的 PR](https://github.com/EndermanMYR/astrbot_plugin_link_preview/pull/2)
+
+> EX 3.0.0 基于 v2.5.0，新增 B站（bilibili）、抖音（douyin）、小红书（xiaohongshu）、微博（weibo）、知乎（zhihu）。
 >
 > B站支持 BV/av 视频及 b23.tv 短链，读取标题、UP主、封面、时长及互动数。其余四个平台读取公开分享页的标题、简介、封面；抖音和小红书支持常见分享短链。不是完整 App 内容抓取，不支持登录后内容、验证码绕过或国内平台评论。平台仅返回登录/验证页时会明确失败；页面结构和网络风控可能影响可用性。
 >
 > 网络安全：预览和配图仅访问解析到公网 IP 的 HTTP(S) 地址，每次连接（含跳转）固定已验证 IP；不自动使用环境代理，仍支持配置项 proxy。Fake-IP DNS（例如部分 TUN 模式）会被拒绝，需对这些域名使用真实 DNS。管理员配置的 X 内网服务使用独立客户端，不受公网限制。GitHub 私有仓库被拒绝；图片只允许常见位图类型，并在读取时限制大小。正文响应上限 8 MiB。
 >
 > 新增平台可在 platforms 中分别关闭。X 预览不再使用登录态正文降级；评论只采用公开接口能读取的内容，公开接口不可用时会减少评论。正文响应只接受未压缩传输，拒绝不遵守 Accept-Encoding: identity 的响应，以防解压膨胀；这可能影响少数站点。升级保留现有插件数据。
-
-# ✨ 外链预览 | Link Preview (AstrBot Plugin)
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![AstrBot](https://img.shields.io/badge/AstrBot-v4.16%2B-brightgreen)
@@ -22,19 +28,19 @@
       <img width="170" alt="Link Preview logo" src="docs/images/logo.png" style="border-radius: 24px;" />
     </td>
     <td>
-      <strong>Link Preview · 外链预览</strong><br />
-      YouTube · TikTok · X · pixiv · Wikipedia<br />
+      <strong>Ex · 外链解析</strong><br />
+      B站 · 抖音 · 小红书 · 微博 · 知乎 · YouTube<br />
       <sub>群里发一条链接，回一张排版好的卡片图。</sub>
     </td>
   </tr>
 </table>
 
-这是一个为 **AstrBot** 编写的插件：群聊里有人发国外平台的链接时，自动抓取标题、作者、正文、配图、数据和热门评论，渲染成一张卡片图片发回群里。
+这是一个为 **AstrBot** 编写的插件：群聊里有人发国内外平台的链接时，自动抓取标题、作者、正文、配图、数据和热门评论，渲染成一张卡片图片发回群里。
 
-[![Stars](https://img.shields.io/github/stars/EndermanMYR/astrbot_plugin_link_preview?color=yellow&label=%E6%A0%87%E6%98%9F)](https://github.com/EndermanMYR/astrbot_plugin_link_preview/stargazers)
-[![Issues](https://img.shields.io/github/issues/EndermanMYR/astrbot_plugin_link_preview?color=darkgreen&label=%E5%8F%8D%E9%A6%88)](https://github.com/EndermanMYR/astrbot_plugin_link_preview/issues)
-[![Pull Requests](https://img.shields.io/github/issues-pr/EndermanMYR/astrbot_plugin_link_preview?color=blue&label=%E8%AF%B7%E6%B1%82)](https://github.com/EndermanMYR/astrbot_plugin_link_preview/pulls)
-[![Last Commit](https://img.shields.io/github/last-commit/EndermanMYR/astrbot_plugin_link_preview?color=blueviolet&label=%E6%9C%80%E8%BF%91%E6%9B%B4%E6%96%B0)](https://github.com/EndermanMYR/astrbot_plugin_link_preview/commits/main)
+[![Stars](https://img.shields.io/github/stars/Enderyouling/Ex_astrbot_plugin_link?color=yellow&label=%E6%A0%87%E6%98%9F)](https://github.com/Enderyouling/Ex_astrbot_plugin_link/stargazers)
+[![Issues](https://img.shields.io/github/issues/Enderyouling/Ex_astrbot_plugin_link?color=darkgreen&label=%E5%8F%8D%E9%A6%88)](https://github.com/Enderyouling/Ex_astrbot_plugin_link/issues)
+[![Pull Requests](https://img.shields.io/github/issues-pr/Enderyouling/Ex_astrbot_plugin_link?color=blue&label=%E8%AF%B7%E6%B1%82)](https://github.com/Enderyouling/Ex_astrbot_plugin_link/pulls)
+[![Last Commit](https://img.shields.io/github/last-commit/Enderyouling/Ex_astrbot_plugin_link?color=blueviolet&label=%E6%9C%80%E8%BF%91%E6%9B%B4%E6%96%B0)](https://github.com/Enderyouling/Ex_astrbot_plugin_link/commits/EX-main)
 
 > [!IMPORTANT]
 > 卡片渲染走 **AstrBot 自带的文转图服务**（`html_render`），插件不再依赖 Playwright、不用装 Chromium、也不用 Docker。代价是渲染依赖该服务，详见下方「渲染」一节。
@@ -45,9 +51,9 @@
 ## ✅ 功能列表 | Features
 
 - **自动识别**：群消息里出现链接就自动出卡片，不需要 @ 或指令
-- **24 个平台**：YouTube、TikTok、Instagram、X、GitHub、Bluesky、pixiv、Steam、Reddit、维基百科、维基文库、Dailymotion、niconico、Spotify、Vimeo、SoundCloud、Threads、Twitch、Facebook
+- **24 个平台**：B站、抖音、小红书、微博、知乎、YouTube、TikTok、Instagram、X、GitHub、Bluesky、pixiv、Steam、Reddit、维基百科、维基文库、Dailymotion、niconico、Spotify、Vimeo、SoundCloud、Threads、Twitch、Facebook
 - **热门评论**：YouTube、TikTok、X、Instagram、GitHub Issue/PR、Bluesky、pixiv、Steam 的卡片会附带几条高赞评论
-- **评论靠 Cookie**：X 需要登录态，填 `x_cookie` 即可，不用在服务器上跑浏览器登录
+- **X 评论**：登录态服务仅提供候选链接，实际返回内容必须经公开接口再次读取；无法公开读取的评论不发送
 - **Steam 评测**：抓社区里最有帮助的评测，带推荐/不推荐、游玩时长和赞数；填了 Web API Key 还能显示当前在线人数
 - **评论单独看**：`/评论` 出一张只放评论的卡，最多 10 条
 - **维基全文**：`/全文` 把词条或维基文库作品分页渲染，合并转发发出，中文按简体显示
@@ -81,6 +87,9 @@
 
 | 平台 | 抓取内容 | 评论 |
 |---|---|---|
+| B站（bilibili） | BV/av 视频与 b23.tv 短链；标题、UP主、封面、时长与互动数 | — |
+| 抖音（douyin） / 小红书（xiaohongshu） | 公开分享页标题、简介、封面及常见短链 | — |
+| 微博（weibo） / 知乎（zhihu） | 公开页面标题、简介与封面 | — |
 | YouTube | 标题、频道、简介、封面、时长、播放/点赞 | ✔ 热门评论 |
 | TikTok | 视频封面或图集、作者、播放/点赞/评论/分享/收藏 | ✔ 按点赞排序 |
 | Instagram | 帖子和 Reels 的作者、配文、图片（通过公开的嵌入修复站读取） | ✘ 实测拿不到，见下方说明 |
@@ -101,6 +110,10 @@
 不在列表里的网址，用 `/预览 链接` 会按普通网页抓 OpenGraph 信息。
 
 ## 📦 安装 | Installation
+
+从本仓库的 [v3.0.0 发行页](https://github.com/Enderyouling/Ex_astrbot_plugin_link/releases/tag/v3.0.0) 下载源码 ZIP，或在 AstrBot 中使用本仓库地址安装。默认维护分支为 `EX-main`。
+
+插件显示名为 **Ex 外链解析**。为沿用原版配置和数据，内部插件 ID 仍为 `astrbot_plugin_link_preview`；请作为原版的升级替换使用，不要同时安装两份。升级前备份插件配置与数据。
 
 将插件目录放入：
 
@@ -381,6 +394,13 @@ python -m unittest discover -s tests -t . -v
 ```
 
 覆盖的是容易悄悄坏掉的部分：链接识别（24 个平台）、数字/时长/时间格式化、OpenGraph 解析、全文分页、词表匹配（含插字写法）、配置项与抓取器是否对齐、发布包是否缺文件。CI 在 `.github/workflows/ci.yml`，推 main 就跑。
+
+## 维护者与贡献 | Maintainers & Contributions
+
+- **EX 版维护与扩展：[@Enderyouling](https://github.com/Enderyouling)**，负责国内平台预览、安全加固、EX 版文档与发行维护。
+- **原作：ネコの先生 / [@EndermanMYR](https://github.com/EndermanMYR)**，提供 v2.5.0 的插件主体、原有平台解析与渲染实现。
+- EX 版在 AI 辅助下完成修改；保留原仓库提交历史与其他贡献记录。GitHub Contributors 由提交记录自动统计。
+- 功能与安全修改已提交原作 [PR #2](https://github.com/EndermanMYR/astrbot_plugin_link_preview/pull/2)；此处的 EX 品牌与维护信息独立维护。
 
 ## ❤️ 致谢 | Credits
 
