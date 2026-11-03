@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "EX-*"]
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
@@ -28,7 +28,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: 语法检查
-        run: python -m py_compile main.py fetchers.py render.py wordfilter.py x-browser-service/scraper.py
+        run: python -m py_compile main.py fetchers.py render.py safe_http.py wordfilter.py x-browser-service/scraper.py
 
       - name: 单元测试
         run: python -m unittest discover -s tests -t . -v
