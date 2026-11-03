@@ -15,13 +15,28 @@ install()
 import render  # noqa: E402
 
 CARD = {
-    "platform": "x", "platform_name": "X", "color": "#000000",
-    "url": "https://x.com/a/status/1", "title": None, "text": "hi",
+    "platform": "x",
+    "platform_name": "X",
+    "color": "#000000",
+    "url": "https://x.com/a/status/1",
+    "title": None,
+    "text": "hi",
     "author": {"name": "a", "handle": "@a", "avatar": None, "bio": ""},
-    "images": [], "stats": [["回复", "1"]], "tags": [], "time": "2026-01-01 00:00",
-    "comments": [], "quote": None, "video": False, "duration": None,
-    "sensitive": False, "note": None, "comments_mode": False, "blur": False,
-    "domain": "x.com", "short_url": "x.com/a/status/1", "icon": "X",
+    "images": [],
+    "stats": [["回复", "1"]],
+    "tags": [],
+    "time": "2026-01-01 00:00",
+    "comments": [],
+    "quote": None,
+    "video": False,
+    "duration": None,
+    "sensitive": False,
+    "note": None,
+    "comments_mode": False,
+    "blur": False,
+    "domain": "x.com",
+    "short_url": "x.com/a/status/1",
+    "icon": "X",
     "no_comments_reason": None,
 }
 
@@ -71,8 +86,8 @@ class TestMediaLayout(unittest.TestCase):
         self.assertFalse(render.media_needs_stack([(0, 0)]))
 
     def test_threshold(self):
-        self.assertFalse(render.media_needs_stack([(100, 120)]))   # 1.2 仍算横/方
-        self.assertTrue(render.media_needs_stack([(100, 130)]))    # 1.3 算竖图
+        self.assertFalse(render.media_needs_stack([(100, 120)]))  # 1.2 仍算横/方
+        self.assertTrue(render.media_needs_stack([(100, 130)]))  # 1.3 算竖图
 
     def test_template_renders_stack_class(self):
         card = dict(CARD, images=["data:image/jpeg;base64,xx"], media_tall=True)
@@ -81,7 +96,9 @@ class TestMediaLayout(unittest.TestCase):
 
     def test_template_without_tall(self):
         card = dict(CARD, images=["data:image/jpeg;base64,xx"], media_tall=False)
-        self.assertNotIn(" stack", render.build_html(card, "dark").split("<body")[1][:2000])
+        self.assertNotIn(
+            " stack", render.build_html(card, "dark").split("<body")[1][:2000]
+        )
 
 
 class TestEmbeddedFont(unittest.TestCase):
@@ -111,8 +128,13 @@ class TestEmbeddedFont(unittest.TestCase):
         self.assertNotIn("antialiased", html, "antialiased 会让字变细")
 
     def test_chars_collected_from_all_fields(self):
-        card = dict(CARD, title="标题甲", text="正文乙", translation="译文丙",
-                    comments=[{"author": "丁", "text": "评论戊", "likes": "1"}])
+        card = dict(
+            CARD,
+            title="标题甲",
+            text="正文乙",
+            translation="译文丙",
+            comments=[{"author": "丁", "text": "评论戊", "likes": "1"}],
+        )
         chars = render._text_chars(card)
         for ch in "标题甲正文乙译文丙丁评论戊":
             self.assertIn(ch, chars)
@@ -120,8 +142,13 @@ class TestEmbeddedFont(unittest.TestCase):
 
 class TestArticleFont(unittest.TestCase):
     def test_article_html_embeds_font(self):
-        article = {"title": "猫", "url": "https://zh.wikipedia.org/wiki/猫",
-                   "author": None, "image": None, "domain": "zh.wikipedia.org"}
+        article = {
+            "title": "猫",
+            "url": "https://zh.wikipedia.org/wiki/猫",
+            "author": None,
+            "image": None,
+            "domain": "zh.wikipedia.org",
+        }
         blocks = [{"level": 2, "title": "概述", "text": "猫是一种哺乳动物。"}]
         html = render.build_article_html(article, blocks, 1, 2, 0, "dark")
         self.assertIn("@font-face", html)
@@ -223,7 +250,53 @@ class TestCropImage(unittest.TestCase):
             self.assertEqual(im.size, (200, 200))
 
     def test_missing_file_does_not_raise(self):
-        self.assertEqual(render.crop_image("/tmp/definitely-not-here.jpg"), "/tmp/definitely-not-here.jpg")
+        self.assertEqual(
+            render.crop_image("/tmp/definitely-not-here.jpg"),
+            "/tmp/definitely-not-here.jpg",
+        )
+
+
+class TestMascot(unittest.TestCase):
+    """看板娘：线上文转图和本地预览拿到同一份变量；图缺失时整块不画。"""
+
+    def test_card_data_has_font_and_mascot(self):
+        d = render.card_data(CARD, "dark")
+        self.assertTrue(d["mascot"].startswith("data:image/webp;base64,"))
+        self.assertIn("@font-face", d["font_css"])
+        self.assertEqual(d["c"]["color"], render.accent_for("#000000", "dark"))
+        self.assertTrue(d["t2i"])
+
+    def test_article_data_has_mascot(self):
+        d = render.article_data(
+            {"title": "t", "url": "https://zh.wikipedia.org/wiki/t"},
+            [{"title": "a", "level": 2, "text": "b"}],
+            1,
+            2,
+        )
+        self.assertTrue(d["mascot"])
+        self.assertIn("@font-face", d["font_css"])
+
+    def test_mascot_drawn(self):
+        html = render.build_html(CARD, "dark")
+        self.assertIn('class="neko"', html)
+        self.assertIn('class="stage has-neko"', html)
+
+    def test_no_mascot_file(self):
+        old = render._MASCOT_URI[:]
+        render._MASCOT_URI[:] = [""]
+        try:
+            html = render.build_html(CARD, "light")
+            self.assertNotIn('class="neko"', html)
+            self.assertNotIn('class="stage has-neko"', html)
+            art = render.build_article_html({"title": "t"}, [], 1, 1)
+            self.assertNotIn('class="neko"', art)
+        finally:
+            render._MASCOT_URI[:] = old
+
+    def test_article_bubble_truncates_title(self):
+        html = render.build_article_html({"title": "很长" * 20}, [], 1, 1)
+        bubble = html.split('class="bubble"')[1].split("</div>")[0]
+        self.assertIn("…", bubble)
 
 
 if __name__ == "__main__":
