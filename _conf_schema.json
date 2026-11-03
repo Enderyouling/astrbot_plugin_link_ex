@@ -129,6 +129,37 @@
                 "type": "bool",
                 "description": "知乎",
                 "default": true
+            },
+            "web": {
+                "description": "其他网站（通用网页预览）",
+                "type": "bool",
+                "default": true,
+                "hint": "没被上面任何平台匹配到的链接，按页面 OpenGraph 出一张卡。内网地址和直链文件会自动跳过"
+            },
+            "kuaishou": {
+                "description": "快手",
+                "type": "bool",
+                "default": true
+            },
+            "ixigua": {
+                "description": "西瓜视频",
+                "type": "bool",
+                "default": true
+            },
+            "vqq": {
+                "description": "腾讯视频",
+                "type": "bool",
+                "default": true
+            },
+            "youku": {
+                "description": "优酷",
+                "type": "bool",
+                "default": true
+            },
+            "iqiyi": {
+                "description": "爱奇艺",
+                "type": "bool",
+                "default": true
             }
         }
     },
@@ -339,5 +370,28 @@
         "type": "bool",
         "default": true,
         "hint": "大模型回复和其他插件发的文字，发出前含屏蔽词就静默不发。直接调用平台接口发的消息（部分插件的主动消息）不经过这一步，管不到；图片里的文字也查不到"
+    },
+    "web_blocklist": {
+        "description": "不预览的网站",
+        "type": "list",
+        "default": [],
+        "hint": "填域名即可，例如 bilibili.com；子域名也会跳过（live.bilibili.com）"
+    },
+    "extra_tlds": {
+        "description": "额外识别的顶级域名",
+        "type": "list",
+        "default": [],
+        "hint": "内置了常见顶级域（com、cn、中国、公司…）。遇到认不出来的就填这里，例如 zip、mov、测试；不用带点"
+    },
+    "max_concurrent_previews": {
+        "description": "同时处理的预览任务上限",
+        "type": "int",
+        "default": 3,
+        "hint": "范围 1–8；卡片与全文共用，超额任务直接跳过或提示忙碌，避免积压"
+    },
+    "show_mascot": {
+        "description": "卡片显示看板娘",
+        "type": "bool",
+        "default": true
     }
 }

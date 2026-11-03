@@ -1,10 +1,28 @@
 # 外链解析 Ex | astrbot_plugin_link_ex
 
-**EX 版维护：[@Enderyouling](https://github.com/Enderyouling)** · **当前版本：3.0.0**
+**EX 版维护：[@Enderyouling](https://github.com/Enderyouling)** · **当前版本：3.0.1**
 
 基于 [EndermanMYR/astrbot_plugin_link_preview](https://github.com/EndermanMYR/astrbot_plugin_link_preview) v2.5.0 的 AstrBot 扩展版本。EX 版新增国内平台预览并加强网络请求安全检查，原作署名与 MIT 许可证保留。
 
-[下载 v3.0.0](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.0) · [更新记录](CHANGELOG.md) · [向原作提交的 PR](https://github.com/EndermanMYR/astrbot_plugin_link_preview/pull/2)
+[下载 v3.0.1](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.1) · [更新记录](CHANGELOG.md) · [向原作提交的 PR](https://github.com/EndermanMYR/astrbot_plugin_link_preview/pull/2)
+
+
+## 3.0.1 更新
+
+维护者：Enderyouling（EX 版）。参考并移植 [原作截至 6fbbaf9（3.1.0）的更新](https://github.com/EndermanMYR/astrbot_plugin_link_preview/commit/6fbbaf9)，保留原作与 MIT 署名。
+
+- 支持自动识别不带协议的域名、中文域名、额外顶级域配置和通用网页预览；增加域名屏蔽列表。
+- 新增快手、西瓜视频、腾讯视频、优酷、爱奇艺公开页面预览；补充微博视频链接格式。含原有知乎，共 29 个命名平台，另有通用网页兜底。
+- 移植看板娘与配色，并提供 show_mascot 开关。修正远端文转图未传入内嵌字体的问题，改进相对封面地址与站点名清理。
+- 字体子集采用有上限的 LRU 缓存，字体处理和图片裁边移出事件循环；磁盘缓存清理每五分钟最多执行一次。
+- 卡片和全文共用并发上限（默认 3），满载时不无限排队；X 评论超时或抓取失败时取消任务，限制评论缓存容量。
+- 翻译结果在渲染前重新过滤；拦截组播地址和超大尺寸图片；保留 DNS 固定 IP、每跳校验、响应大小限制和私有内容拦截。
+- 按商城建议删除 render.py 的标准库 logging.getLogger 调用，仅用 AstrBot logger 记录插件事件。
+
+没有引入上游 yt-dlp/ffmpeg 视频下载：它们的外部网络请求不经过 EX 的公网校验。也没有引入证书错误自动降级 HTTP 或 Fake-IP 放行。新增视频站点为公开元信息预览，登录、验证码、站点改版仍可能导致失败。
+
+本版本仍为 astrbot_plugin_link_ex，3.0.0 升级保留同一配置和数据目录。测试使用模拟网络及本地 HTML；真实 AstrBot/QQ 收发、平台实网风控与外部渲染服务隔离未验收。
+
 
 > EX 3.0.0 基于 v2.5.0，新增 B站（bilibili）、抖音（douyin）、小红书（xiaohongshu）、微博（weibo）、知乎（zhihu）。
 >
@@ -51,7 +69,7 @@
 ## ✅ 功能列表 | Features
 
 - **自动识别**：群消息里出现链接就自动出卡片，不需要 @ 或指令
-- **24 个平台**：B站、抖音、小红书、微博、知乎、YouTube、TikTok、Instagram、X、GitHub、Bluesky、pixiv、Steam、Reddit、维基百科、维基文库、Dailymotion、niconico、Spotify、Vimeo、SoundCloud、Threads、Twitch、Facebook
+- **29 个平台**：快手、西瓜视频、腾讯视频、优酷、爱奇艺、B站、抖音、小红书、微博、知乎、YouTube、TikTok、Instagram、X、GitHub、Bluesky、pixiv、Steam、Reddit、维基百科、维基文库、Dailymotion、niconico、Spotify、Vimeo、SoundCloud、Threads、Twitch、Facebook
 - **热门评论**：YouTube、TikTok、X、Instagram、GitHub Issue/PR、Bluesky、pixiv、Steam 的卡片会附带几条高赞评论
 - **X 评论**：登录态服务仅提供候选链接，实际返回内容必须经公开接口再次读取；无法公开读取的评论不发送
 - **Steam 评测**：抓社区里最有帮助的评测，带推荐/不推荐、游玩时长和赞数；填了 Web API Key 还能显示当前在线人数
@@ -87,6 +105,7 @@
 
 | 平台 | 抓取内容 | 评论 |
 |---|---|---|
+| 快手 / 西瓜视频 / 腾讯视频 / 优酷 / 爱奇艺 | 公开页面标题、简介与封面；不含视频下载 | — |
 | B站（bilibili） | BV/av 视频与 b23.tv 短链；标题、UP主、封面、时长与互动数 | — |
 | 抖音（douyin） / 小红书（xiaohongshu） | 公开分享页标题、简介、封面及常见短链 | — |
 | 微博（weibo） / 知乎（zhihu） | 公开页面标题、简介与封面 | — |
@@ -107,11 +126,11 @@
 | Twitch | 频道资料、是否在播、直播标题、观众数、分类、16:9 预览图；切片也行（走公开 GQL，不受登录墙影响） | — |
 | Threads / Facebook | 页面元信息（要登录的页面不发） | — |
 
-不在列表里的网址，用 `/预览 链接` 会按普通网页抓 OpenGraph 信息。
+通用网页也可自动识别（含无协议域名和中文域名），在 platforms.web 中关闭；`/预览 链接` 可手动调用。web_blocklist 对自动和手动入口均生效，也包括已记住的历史链接。
 
 ## 📦 安装 | Installation
 
-从本仓库的 [v3.0.0 发行页](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.0) 下载源码 ZIP，或在 AstrBot 中使用本仓库地址安装。默认维护分支为 `EX-main`。
+从本仓库的 [v3.0.1 发行页](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.1) 下载源码 ZIP，或在 AstrBot 中使用本仓库地址安装。默认维护分支为 `EX-main`。
 
 插件显示名为 **外链解析 Ex**，插件 ID 与仓库名统一为 `astrbot_plugin_link_ex`。从原版切换前请备份配置与数据，并停用原版，避免相同命令和自动预览重复触发。新 ID 使用独立配置与数据目录，不会自动导入旧配置；请在 WebUI 重新填写或导入原配置。需要保留自定义词表和群图片开关时，在停用两版后，将旧目录 `data/plugin_data/astrbot_plugin_link_preview/` 中的自定义词表及 `image_switch.json` 复制到新目录 `data/plugin_data/astrbot_plugin_link_ex/`；目标已有文件时先备份并核对，不要直接覆盖。
 
@@ -383,17 +402,8 @@ asyncio.run(main())
 python -m unittest discover -s tests -t . -v
 ```
 
-覆盖的是容易悄悄坏掉的部分：链接识别（24 个平台）、数字/时长/时间格式化、OpenGraph 解析、全文分页、词表匹配（含插字写法）、配置项与抓取器是否对齐、发布包是否缺文件、模板字体栈顺序、裁边逻辑。CI 在 `.github/workflows/ci.yml`，推 main 就跑。
+覆盖的是容易悄悄坏掉的部分：链接识别（29 个平台及通用网页）、数字/时长/时间格式化、OpenGraph 解析、全文分页、词表匹配（含插字写法）、配置项与抓取器是否对齐、发布包是否缺文件、模板字体栈顺序、裁边逻辑。CI 在 `.github/workflows/ci.yml`，推送 EX 分支、main 或版本标签时执行。
 
-### 单元测试
-
-测试用标准库 `unittest`，不联网、不需要 AstrBot（`tests/_stub.py` 会在进程内伪造 `astrbot.api.logger`）：
-
-```bash
-python -m unittest discover -s tests -t . -v
-```
-
-覆盖的是容易悄悄坏掉的部分：链接识别（24 个平台）、数字/时长/时间格式化、OpenGraph 解析、全文分页、词表匹配（含插字写法）、配置项与抓取器是否对齐、发布包是否缺文件。CI 在 `.github/workflows/ci.yml`，推 main 就跑。
 
 ## 维护者与贡献 | Maintainers & Contributions
 

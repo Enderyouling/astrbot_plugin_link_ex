@@ -1,6 +1,7 @@
-"""外链预览：识别群聊里的国外平台链接，抓取内容画成卡片图片发回群里。"""
+"""外链预览：识别群聊里的国内外平台链接，抓取内容画成卡片图片发回群里。"""
 
 import asyncio
+from contextlib import asynccontextmanager
 import hashlib
 import json
 import re
@@ -31,9 +32,22 @@ HELP = """外链解析 Ex
 PLUGIN_NAME = "astrbot_plugin_link_ex"
 # 本插件注册的指令和别名，用来把「指令消息」和「普通聊天」区分开
 COMMAND_NAMES = {
-    "预览", "preview", "评论", "comments", "看评论",
-    "全文", "fulltext", "维基全文", "预览图片", "previewimg", "预览配图",
-    "预览帮助", "previewhelp", "翻译", "translate", "翻译帖子",
+    "预览",
+    "preview",
+    "评论",
+    "comments",
+    "看评论",
+    "全文",
+    "fulltext",
+    "维基全文",
+    "预览图片",
+    "previewimg",
+    "预览配图",
+    "预览帮助",
+    "previewhelp",
+    "翻译",
+    "translate",
+    "翻译帖子",
 }
 # 词表默认放在插件数据目录（data/plugin_data/<插件名>/）下，随插件数据一起迁移和审计。
 WORDS_NAME = "political.txt"
@@ -55,7 +69,9 @@ def _cookie_pair(raw):
     if auth and ct0:
         return auth.group(1), ct0.group(1)
     # 允许只粘两条值，按「长的当 ct0」兜底
-    parts = [x for x in re.split(r"[;\s]+", text) if re.fullmatch(r"[0-9a-zA-Z]{20,}", x)]
+    parts = [
+        x for x in re.split(r"[;\s]+", text) if re.fullmatch(r"[0-9a-zA-Z]{20,}", x)
+    ]
     if len(parts) == 2:
         parts.sort(key=len)
         return parts[0], parts[1]
@@ -64,11 +80,13 @@ def _cookie_pair(raw):
 
 class Blocked(Exception):
     """内容命中敏感词。"""
+
     notice = None
 
 
 class RestrictedBlocked(Blocked):
     """内容被判定为不适宜（命中分级词表，或被平台标记）。"""
+
     notice = "这个链接可能含成人内容，不予预览。"
 
 
@@ -91,6 +109,8 @@ class LinkPreviewPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.config = config
+        self._active_jobs = 0
+        self._cleanup_at = 0.0
         self.data_dir = Path(StarTools.get_data_dir(PLUGIN_NAME))
         self.cache_dir = self.data_dir / "cards"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -100,23 +120,41 @@ class LinkPreviewPlugin(Star):
             self._img_switch = json.loads(self._img_file.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             self._img_switch = {}
-        self._recent = {}      # (会话, 链接) -> 上次预览时间，用来去重
-        self._last_link = {}   # 会话 -> 最近一次预览的 (平台, 链接)，给 /评论 用
-        self._x_replies = {}   # 帖子 ID -> (时间, 回复列表)；后台没等完的结果留给 /评论 用
+        self._recent = {}  # (会话, 链接) -> 上次预览时间，用来去重
+        self._last_link = {}  # 会话 -> 最近一次预览的 (平台, 链接)，给 /评论 用
+        self._x_replies = {}  # 帖子 ID -> (时间, 回复列表)，有上限的短期缓存
         words_file = self._words_path("block_words_file", WORDS_NAME, LEGACY_WORDS_FILE)
         try:
-            self.filter = wordfilter.WordFilter(words_file, self.config.get("block_words") or [])
-            logger.info(f"[LinkPreview] 敏感词表已加载 {self.filter.count} 个词：{words_file}")
+            self.filter = wordfilter.WordFilter(
+                words_file, self.config.get("block_words") or []
+            )
+            logger.info(
+                f"[LinkPreview] 敏感词表已加载 {self.filter.count} 个词：{words_file}"
+            )
         except OSError as e:
             logger.error(f"[LinkPreview] 敏感词表加载失败：{e}")
-            self.filter = wordfilter.WordFilter(None, self.config.get("block_words") or [])
-        restricted_file = self._words_path("restricted_words_file", RESTRICTED_NAME, None)
+            self.filter = wordfilter.WordFilter(
+                None, self.config.get("block_words") or []
+            )
+        restricted_file = self._words_path(
+            "restricted_words_file", RESTRICTED_NAME, None
+        )
         try:
-            self.restricted = wordfilter.WordFilter(restricted_file, self.config.get("restricted_words") or [], wordfilter.BUNDLED_RESTRICTED)
-            logger.info(f"[LinkPreview] 分级词表已加载 {self.restricted.count} 个词：{restricted_file}")
+            self.restricted = wordfilter.WordFilter(
+                restricted_file,
+                self.config.get("restricted_words") or [],
+                wordfilter.BUNDLED_RESTRICTED,
+            )
+            logger.info(
+                f"[LinkPreview] 分级词表已加载 {self.restricted.count} 个词：{restricted_file}"
+            )
         except OSError as e:
             logger.error(f"[LinkPreview] 分级词表加载失败：{e}")
-            self.restricted = wordfilter.WordFilter(None, self.config.get("restricted_words") or [], wordfilter.BUNDLED_RESTRICTED)
+            self.restricted = wordfilter.WordFilter(
+                None,
+                self.config.get("restricted_words") or [],
+                wordfilter.BUNDLED_RESTRICTED,
+            )
 
     async def initialize(self):
         """插件被激活时调用；这里才保证有事件循环，用来写入手填的 Cookie。"""
@@ -156,7 +194,26 @@ class LinkPreviewPlugin(Star):
 
     def _platforms(self):
         conf = self.config.get("platforms") or {}
-        return {k: _bool(conf.get(k), True) for k in fetchers.PLATFORMS if k != "web"}
+        return {k: _bool(conf.get(k), True) for k in fetchers.PLATFORMS}
+
+    def _web_blocklist(self):
+        return self.config.get("web_blocklist") or []
+
+    def _extra_tlds(self):
+        return fetchers.normalize_tlds(self.config.get("extra_tlds") or [])
+
+    @asynccontextmanager
+    async def _preview_slot(self):
+        # Reject excess work before allocating network/image buffers; do not build an unbounded queue.
+        if self._active_jobs >= _int(
+            self.config.get("max_concurrent_previews", 3), 3, 1, 8
+        ):
+            raise RuntimeError("预览任务繁忙，请稍后重试")
+        self._active_jobs += 1
+        try:
+            yield
+        finally:
+            self._active_jobs -= 1
 
     def _allowed(self, event):
         if not _bool(self.config.get("enabled", True), True):
@@ -164,8 +221,16 @@ class LinkPreviewPlugin(Star):
         gid = str(event.get_group_id() or "")
         if not gid:
             return _bool(self.config.get("private_enabled", False))
-        white = [str(x).strip() for x in self.config.get("group_whitelist") or [] if str(x).strip()]
-        black = [str(x).strip() for x in self.config.get("group_blacklist") or [] if str(x).strip()]
+        white = [
+            str(x).strip()
+            for x in self.config.get("group_whitelist") or []
+            if str(x).strip()
+        ]
+        black = [
+            str(x).strip()
+            for x in self.config.get("group_blacklist") or []
+            if str(x).strip()
+        ]
         if white and gid not in white:
             return False
         return gid not in black
@@ -181,23 +246,50 @@ class LinkPreviewPlugin(Star):
     def _filter_card(self, card):
         """评论命中的单独去掉；正文命中按设置整条不发或打码。分级内容一律整条不发。"""
         if _bool(self.config.get("restricted_enabled", True), True):
-            card["comments"] = [c for c in card.get("comments") or [] if not self.restricted.find(c.get("author"), c.get("text"))]
+            card["comments"] = [
+                c
+                for c in card.get("comments") or []
+                if not self.restricted.find(c.get("author"), c.get("text"))
+            ]
             a, q = card.get("author") or {}, card.get("quote") or {}
-            flagged = card.get("sensitive") and _bool(self.config.get("restricted_block_flagged", True), True)
-            if flagged or self.restricted.find(card.get("title"), card.get("text"), a.get("name"), a.get("handle"),
-                                        a.get("bio"), q.get("text"), " ".join(card.get("tags") or [])):
+            flagged = card.get("sensitive") and _bool(
+                self.config.get("restricted_block_flagged", True), True
+            )
+            if flagged or self.restricted.find(
+                card.get("title"),
+                card.get("text"),
+                card.get("translation"),
+                a.get("name"),
+                a.get("handle"),
+                a.get("bio"),
+                q.get("text"),
+                " ".join(card.get("tags") or []),
+            ):
                 raise RestrictedBlocked()
         if not self._block_on():
             return card
         f = self.filter
-        card["comments"] = [c for c in card.get("comments") or [] if not f.find(c.get("author"), c.get("text"))]
+        card["comments"] = [
+            c
+            for c in card.get("comments") or []
+            if not f.find(c.get("author"), c.get("text"))
+        ]
         author = card.get("author") or {}
         quote = card.get("quote") or {}
 
         def fields():
             a, q = card.get("author") or {}, card.get("quote") or {}
-            return (card.get("title"), card.get("text"), a.get("name"), a.get("handle"),
-                    q.get("author"), q.get("text"), " ".join(card.get("tags") or []), card.get("note"))
+            return (
+                card.get("title"),
+                card.get("text"),
+                card.get("translation"),
+                a.get("name"),
+                a.get("handle"),
+                q.get("author"),
+                q.get("text"),
+                " ".join(card.get("tags") or []),
+                card.get("note"),
+            )
 
         # 按账号屏蔽：作者简介里带敏感词的账号，不管这条发的是什么都不预览
         if f.find(author.get("bio")):
@@ -206,16 +298,28 @@ class LinkPreviewPlugin(Star):
             return card
         if not self._mask_mode():
             raise Blocked()
-        card["title"], card["text"] = f.mask(card.get("title")), f.mask(card.get("text"))
+        card["title"], card["text"] = (
+            f.mask(card.get("title")),
+            f.mask(card.get("text")),
+        )
+        card["translation"] = f.mask(card.get("translation"))
         if author:
-            card["author"] = dict(author, name=f.mask(author.get("name")), handle=f.mask(author.get("handle")))
+            card["author"] = dict(
+                author,
+                name=f.mask(author.get("name")),
+                handle=f.mask(author.get("handle")),
+            )
         if quote:
-            card["quote"] = dict(quote, author=f.mask(quote.get("author")), text=f.mask(quote.get("text")))
+            card["quote"] = dict(
+                quote,
+                author=f.mask(quote.get("author")),
+                text=f.mask(quote.get("text")),
+            )
         card["tags"] = [f.mask(t) for t in card.get("tags") or []]
-        card["images"] = []      # 文字打码了，配图里同样的内容遮不住，干脆不放
+        card["images"] = []  # 文字打码了，配图里同样的内容遮不住，干脆不放
         card["note"] = "含屏蔽词，已打码"
         card["sensitive"] = True
-        if f.find(*fields()):    # 插字写法打不了码，只能整条不发
+        if f.find(*fields()):  # 插字写法打不了码，只能整条不发
             raise Blocked()
         return card
 
@@ -224,7 +328,9 @@ class LinkPreviewPlugin(Star):
         for s in article["sections"]:
             texts += [s.get("title"), s.get("text")]
         # 分级内容一律整条不发，不打码（和卡片走同一套判定）
-        if _bool(self.config.get("restricted_enabled", True), True) and self.restricted.find(*texts):
+        if _bool(
+            self.config.get("restricted_enabled", True), True
+        ) and self.restricted.find(*texts):
             raise RestrictedBlocked()
         if not self._block_on():
             return article
@@ -233,9 +339,18 @@ class LinkPreviewPlugin(Star):
             return article
         if not self._mask_mode():
             raise Blocked()
-        article = dict(article, title=f.mask(article.get("title")), byline=f.mask(article.get("byline")))
-        article["sections"] = [dict(s, title=f.mask(s.get("title")), text=f.mask(s.get("text"))) for s in article["sections"]]
-        texts = [article["title"], article["byline"]] + [x for s in article["sections"] for x in (s["title"], s["text"])]
+        article = dict(
+            article,
+            title=f.mask(article.get("title")),
+            byline=f.mask(article.get("byline")),
+        )
+        article["sections"] = [
+            dict(s, title=f.mask(s.get("title")), text=f.mask(s.get("text")))
+            for s in article["sections"]
+        ]
+        texts = [article["title"], article["byline"]] + [
+            x for s in article["sections"] for x in (s["title"], s["text"])
+        ]
         if f.find(*texts):
             raise Blocked()
         return article
@@ -255,25 +370,33 @@ class LinkPreviewPlugin(Star):
             return
         url, token = self._x_service()
         if not url or not token:
-            logger.warning("[LinkPreview] 填了 x_cookie 但没配 x_browser_url/token，跳过")
+            logger.warning(
+                "[LinkPreview] 填了 x_cookie 但没配 x_browser_url/token，跳过"
+            )
             return
         try:
             async with httpx.AsyncClient(trust_env=False, timeout=20) as c:
-                r = await c.post(url.rstrip("/") + "/api/cookies",
-                                 headers={"Authorization": "Bearer " + token},
-                                 json={"auth_token": pair[0], "ct0": pair[1]})
+                r = await c.post(
+                    url.rstrip("/") + "/api/cookies",
+                    headers={"Authorization": "Bearer " + token},
+                    json={"auth_token": pair[0], "ct0": pair[1]},
+                )
             if r.status_code == 200:
                 logger.info("[LinkPreview] 已写入手填的 X Cookie")
             else:
-                logger.warning(f"[LinkPreview] 写入 X Cookie 失败：HTTP {r.status_code}")
+                logger.warning(
+                    f"[LinkPreview] 写入 X Cookie 失败：HTTP {r.status_code}"
+                )
         except Exception as e:
             logger.warning(f"[LinkPreview] 写入 X Cookie 出错：{e}")
 
     async def _x_replies_for(self, url, n, wait):
-        """等最多 wait 秒；没等完就先返回空，后台继续抓，结果缓存给下次（比如 /评论）用。"""
+        """等最多 wait 秒；超时取消任务，成功结果限量缓存。"""
         m = re.search(r"/status(?:es)?/(\d{1,19})", url)
         service, token = self._x_service()
         if not m or not service or not _bool(self.config.get("x_comments", True), True):
+            return []
+        if wait <= 0:
             return []
         tid = m.group(1)
         hit = self._x_replies.get(tid)
@@ -282,19 +405,25 @@ class LinkPreviewPlugin(Star):
 
         async def job():
             try:
-                rows = await fetchers.fetch_x_replies(service, token, tid, max(n, 10), budget=wait)
+                rows = await fetchers.fetch_x_replies(
+                    service, token, tid, max(n, 10), budget=wait
+                )
             except Exception as e:
                 logger.info(f"[LinkPreview] X 回复获取失败 {tid}：{e}")
                 return []
+            if len(self._x_replies) >= 128:
+                self._x_replies.pop(next(iter(self._x_replies)))
             self._x_replies[tid] = (time.time(), rows)
             logger.info(f"[LinkPreview] X 回复 {tid} 抓到 {len(rows)} 条")
             return rows
 
         task = asyncio.ensure_future(job())
         try:
-            rows = await asyncio.wait_for(asyncio.shield(task), wait)
+            rows = await asyncio.wait_for(task, wait)
         except asyncio.TimeoutError:
-            logger.warning(f"[LinkPreview] X 回复 {wait} 秒内没抓完，先发不带评论的卡片（后台会继续抓，稍后 /评论 能看）")
+            logger.warning(
+                f"[LinkPreview] X 回复 {wait} 秒内没抓完，已取消评论任务，先发不带评论的卡片"
+            )
             return []
         return rows[:n]
 
@@ -317,7 +446,11 @@ class LinkPreviewPlugin(Star):
         parts = [event.message_str or ""]
         for seg in event.get_messages() or []:
             if isinstance(seg, Comp.Json):
-                data = seg.data if isinstance(seg.data, str) else json.dumps(seg.data, ensure_ascii=False)
+                data = (
+                    seg.data
+                    if isinstance(seg.data, str)
+                    else json.dumps(seg.data, ensure_ascii=False)
+                )
                 parts.append(data.replace("\\/", "/"))
         return "\n".join(parts)
 
@@ -349,6 +482,10 @@ class LinkPreviewPlugin(Star):
         return False
 
     def _clean_cache(self):
+        now = time.monotonic()
+        if now - self._cleanup_at < 300:
+            return
+        self._cleanup_at = now
         cutoff = time.time() - 6 * 3600
         for f in self.cache_dir.glob("*.jpg"):
             try:
@@ -366,16 +503,20 @@ class LinkPreviewPlugin(Star):
         """调 AstrBot 当前使用的对话模型翻译。没配模型就抛错。"""
         try:
             provider = self.context.get_using_provider(umo)
-        except ValueError as e:      # 该会话配的不是对话模型（比如选成了 TTS）
+        except ValueError as e:  # 该会话配的不是对话模型（比如选成了 TTS）
             raise RuntimeError(f"当前会话的模型不能用来翻译：{e}") from e
         if not provider:
             raise RuntimeError("没有可用的对话模型，请先在 AstrBot 里配置 LLM 提供商")
-        target = str(self.config.get("translate_target", "简体中文") or "简体中文").strip()
+        target = str(
+            self.config.get("translate_target", "简体中文") or "简体中文"
+        ).strip()
         resp = await asyncio.wait_for(
             provider.text_chat(
                 prompt=text,
-                system_prompt=(f"把用户给的内容翻译成{target}。只输出译文，保留原有换行和分段，"
-                               "不要解释、不要加引号、不要重复原文。"),
+                system_prompt=(
+                    f"把用户给的内容翻译成{target}。只输出译文，保留原有换行和分段，"
+                    "不要解释、不要加引号、不要重复原文。"
+                ),
                 contexts=[],
             ),
             timeout,
@@ -387,7 +528,11 @@ class LinkPreviewPlugin(Star):
 
     async def _translate_card(self, card, umo=None):
         """翻译标题和正文，拼成一段放卡片里。"""
-        parts = [x.strip() for x in (card.get("title"), card.get("text")) if (x or "").strip()]
+        parts = [
+            x.strip()
+            for x in (card.get("title"), card.get("text"))
+            if (x or "").strip()
+        ]
         if not parts:
             return None
         return await self._translate_text("\n\n".join(parts), umo)
@@ -404,47 +549,91 @@ class LinkPreviewPlugin(Star):
         for i in range(attempts):
             try:
                 path = await asyncio.wait_for(
-                    self.html_render(tmpl, data, return_url=False, options=render.t2i_options()),
+                    self.html_render(
+                        tmpl, data, return_url=False, options=render.t2i_options()
+                    ),
                     timeout,
                 )
                 shutil.copyfile(path, out)
-                render.crop_image(str(out))
+                await asyncio.to_thread(render.crop_image, str(out))
                 return str(out)
             except Exception as e:
                 last = e
-                logger.warning(f"[LinkPreview] 文转图失败（第 {i + 1}/{attempts} 次）：{e}")
+                logger.warning(
+                    f"[LinkPreview] 文转图失败（第 {i + 1}/{attempts} 次）：{e}"
+                )
                 if i + 1 < attempts:
                     await asyncio.sleep(1.2 * (i + 1))
         raise RuntimeError(f"文转图服务不可用：{last}")
 
     async def _render_html(self, tmpl_path, card, out):
         theme = "light" if self.config.get("theme") == "light" else "dark"
-        return await self._t2i(tmpl_path, {"c": card, "theme": theme, "t2i": True}, out)
+        data = await asyncio.to_thread(render.card_data, card, theme)
+        if not _bool(self.config.get("show_mascot", True), True):
+            data["mascot"] = ""
+        return await self._t2i(tmpl_path, data, out)
 
     async def _render_page(self, article, blocks, no, total, hidden, theme, out):
-        data = {"a": article, "blocks": blocks, "no": no, "total": total, "hidden": hidden,
-                "theme": "light" if theme == "light" else "dark", "t2i": True}
+        data = await asyncio.to_thread(
+            render.article_data, article, blocks, no, total, hidden, theme
+        )
+        if not _bool(self.config.get("show_mascot", True), True):
+            data["mascot"] = ""
         return await self._t2i(render.ARTICLE, data, out)
 
-    async def _make_card_image(self, platform, url, comments_mode=False, session=None, translate=False):
+    async def _make_card_image(
+        self, platform, url, comments_mode=False, session=None, translate=False
+    ):
+        if fetchers._web_blocked(urlsplit(url).hostname or "", self._web_blocklist()):
+            raise fetchers.FetchError("该域名已被管理员屏蔽")
+        async with self._preview_slot():
+            return await self._make_card_image_impl(
+                platform, url, comments_mode, session, translate
+            )
+
+    async def _make_card_image_impl(
+        self, platform, url, comments_mode=False, session=None, translate=False
+    ):
         """抓取 + 渲染，返回图片路径；失败返回 None。"""
-        n_comments = 10 if comments_mode else _int(self.config.get("comment_count", 3), 3, 0, 10)
+        n_comments = (
+            10 if comments_mode else _int(self.config.get("comment_count", 3), 3, 0, 10)
+        )
         timeout = _int(self.config.get("fetch_timeout", 12), 12, 3, 60)
-        async with fetchers.make_client(self.config.get("proxy") or None, timeout) as client:
+        async with fetchers.make_client(
+            self.config.get("proxy") or None, timeout
+        ) as client:
             x_task = None
             if platform == "x" and n_comments:
-                wait = 75 if comments_mode else _int(self.config.get("x_comments_wait", 25), 25, 0, 60)
-                x_task = asyncio.ensure_future(self._x_replies_for(url, n_comments, wait))
-            card = await fetchers.fetch(client, platform, url,
-                                        github_token=self.config.get("github_token") or None,
-                                        comments=n_comments,
-                                        steam_api_key=self.config.get("steam_api_key") or None,
-                                        x_service=self._x_service() if platform == "x" else None)
-            if x_task:
-                card["comments"] = await x_task
+                wait = (
+                    75
+                    if comments_mode
+                    else _int(self.config.get("x_comments_wait", 25), 25, 0, 60)
+                )
+                x_task = asyncio.ensure_future(
+                    self._x_replies_for(url, n_comments, wait)
+                )
+            try:
+                card = await fetchers.fetch(
+                    client,
+                    platform,
+                    url,
+                    github_token=self.config.get("github_token") or None,
+                    comments=n_comments,
+                    steam_api_key=self.config.get("steam_api_key") or None,
+                    x_service=self._x_service() if platform == "x" else None,
+                )
+                if x_task:
+                    card["comments"] = await x_task
+            finally:
+                if x_task and not x_task.done():
+                    x_task.cancel()
+                    await asyncio.gather(x_task, return_exceptions=True)
             card = self._filter_card(card)
             auto = _bool(self.config.get("translate_auto", True), True)
-            if translate or (auto and fetchers.needs_translation(card.get("text") or card.get("title"))):
+            if translate or (
+                auto
+                and fetchers.needs_translation(card.get("text") or card.get("title"))
+            ):
                 try:
                     card["translation"] = await self._translate_card(card, session)
                     logger.info("[LinkPreview] 已翻译卡片正文")
@@ -452,31 +641,48 @@ class LinkPreviewPlugin(Star):
                     logger.warning(f"[LinkPreview] 翻译失败：{e}")
                     if translate:
                         raise RuntimeError(f"翻译失败：{e}") from e
+            card = self._filter_card(card)
             if comments_mode and not card.get("comments"):
                 card["no_comments_reason"] = (
-                    "这个平台拿不到评论" if platform not in fetchers.COMMENT_PLATFORMS else "暂时没有评论"
+                    "这个平台拿不到评论"
+                    if platform not in fetchers.COMMENT_PLATFORMS
+                    else "暂时没有评论"
                 )
             card = await render.prepare(
-                client, card,
+                client,
+                card,
                 text_length=_int(self.config.get("text_length", 420), 420, 60, 2000),
                 show_images=self._show_images(session),
                 comments_mode=comments_mode,
             )
-        if card.get("sensitive") and not _bool(self.config.get("blur_sensitive", True), True):
+        if card.get("sensitive") and not _bool(
+            self.config.get("blur_sensitive", True), True
+        ):
             card["blur"] = False
-        name = hashlib.md5(f"{url}|{comments_mode}|{time.time()}".encode()).hexdigest()[:16] + ".jpg"
+        name = (
+            hashlib.md5(f"{url}|{comments_mode}|{time.time()}".encode()).hexdigest()[
+                :16
+            ]
+            + ".jpg"
+        )
         out = self.cache_dir / name
         return await self._render_html(render.TEMPLATE, card, out)
 
-    async def _preview(self, event, links, comments_mode=False, quiet=True, translate=False):
-        self._clean_cache()
+    async def _preview(
+        self, event, links, comments_mode=False, quiet=True, translate=False
+    ):
+        await asyncio.to_thread(self._clean_cache)
         session = event.unified_msg_origin
         for platform, url in links:
             logger.info(f"[LinkPreview] 开始预览 {platform} {url}")
             try:
-                path = await self._make_card_image(platform, url, comments_mode, session, translate)
+                path = await self._make_card_image(
+                    platform, url, comments_mode, session, translate
+                )
             except Blocked as e:
-                logger.info(f"[LinkPreview] {platform} {url} {'疑似不适宜内容' if isinstance(e, RestrictedBlocked) else '命中屏蔽词'}，已拦截")
+                logger.info(
+                    f"[LinkPreview] {platform} {url} {'疑似不适宜内容' if isinstance(e, RestrictedBlocked) else '命中屏蔽词'}，已拦截"
+                )
                 if not quiet or _bool(self.config.get("block_notice", True), True):
                     yield event.plain_result(e.notice or BLOCK_NOTICE)
                 continue
@@ -488,7 +694,11 @@ class LinkPreviewPlugin(Star):
             if not path:
                 continue
             self._last_link[session] = (platform, url)
-            image = Comp.Image.fromURL(path) if str(path).startswith("http") else Comp.Image.fromFileSystem(path)
+            image = (
+                Comp.Image.fromURL(path)
+                if str(path).startswith("http")
+                else Comp.Image.fromFileSystem(path)
+            )
             if not await self._send_or_notice(event, [image]):
                 yield event.plain_result(SEND_FAIL_NOTICE)
 
@@ -499,10 +709,20 @@ class LinkPreviewPlugin(Star):
         text = (event.message_str or "").strip()
         if self._is_command(text) or not self._allowed(event):
             return
-        if "http" not in text.lower() and not any(isinstance(s, Comp.Json) for s in event.get_messages() or []):
+        if (
+            "." not in text
+            and "http" not in text.lower()
+            and not any(isinstance(s, Comp.Json) for s in event.get_messages() or [])
+        ):
             return
         limit = _int(self.config.get("max_links_per_message", 2), 2, 1, 5)
-        found = fetchers.find_links(self._message_text(event), self._platforms(), limit)
+        found = fetchers.find_links(
+            self._message_text(event),
+            self._platforms(),
+            limit,
+            self._web_blocklist(),
+            self._extra_tlds(),
+        )
         session = event.unified_msg_origin
         links = []
         for p, u in found:
@@ -512,7 +732,10 @@ class LinkPreviewPlugin(Star):
                 links.append((p, u))
         if not links:
             return
-        logger.info(f"[LinkPreview] 自动预览 {len(links)} 条：" + " | ".join(u for _, u in links))
+        logger.info(
+            f"[LinkPreview] 自动预览 {len(links)} 条："
+            + " | ".join(u for _, u in links)
+        )
         async for res in self._preview(event, links):
             yield res
 
@@ -538,15 +761,21 @@ class LinkPreviewPlugin(Star):
         放在发送前处理的最后一步，检查的是其他插件加工完的最终文字。
         直接调用平台接口发的消息（比如部分插件的主动消息）不经过这里，管不到。
         """
-        if not (self._block_on() and _bool(self.config.get("block_outgoing", True), True)):
+        if not (
+            self._block_on() and _bool(self.config.get("block_outgoing", True), True)
+        ):
             return
         result = event.get_result()
         if not result or not result.chain:
             return
         text = self._chain_text(result.chain)
-        restricted_hit = _bool(self.config.get("restricted_outgoing", False)) and self.restricted.find(text)
+        restricted_hit = _bool(
+            self.config.get("restricted_outgoing", False)
+        ) and self.restricted.find(text)
         if text and (self.filter.find(text) or restricted_hit):
-            logger.info(f"[LinkPreview] 拦下一条含屏蔽词的回复，不发送（{event.unified_msg_origin}）")
+            logger.info(
+                f"[LinkPreview] 拦下一条含屏蔽词的回复，不发送（{event.unified_msg_origin}）"
+            )
             if _bool(self.config.get("block_notice", True), True):
                 result.chain = [Comp.Plain(REPLY_BLOCK_NOTICE)]
             else:
@@ -573,11 +802,15 @@ class LinkPreviewPlugin(Star):
         elif arg in ("默认", "重置", "reset", "default"):
             self._img_switch.pop(session, None)
         elif arg:
-            yield event.plain_result("用法：/预览图片 开 | 关 | 默认（不带参数查看当前状态）")
+            yield event.plain_result(
+                "用法：/预览图片 开 | 关 | 默认（不带参数查看当前状态）"
+            )
             return
         if arg:
             try:
-                self._img_file.write_text(json.dumps(self._img_switch, ensure_ascii=False), encoding="utf-8")
+                self._img_file.write_text(
+                    json.dumps(self._img_switch, ensure_ascii=False), encoding="utf-8"
+                )
             except OSError as e:
                 logger.error(f"[LinkPreview] 保存配图开关失败：{e}")
         state = "显示" if self._show_images(session) else "不显示"
@@ -604,15 +837,25 @@ class LinkPreviewPlugin(Star):
                 yield event.plain_result("用法：/评论 链接（本群最近没有预览过链接）")
                 return
             links = [last]
-        async for res in self._preview(event, links[:1], comments_mode=True, quiet=False):
+        async for res in self._preview(
+            event, links[:1], comments_mode=True, quiet=False
+        ):
             yield res
 
     async def _render_article(self, platform, url):
+        if fetchers._web_blocked(urlsplit(url).hostname or "", self._web_blocklist()):
+            raise fetchers.FetchError("该域名已被管理员屏蔽")
+        async with self._preview_slot():
+            return await self._render_article_impl(platform, url)
+
+    async def _render_article_impl(self, platform, url):
         """维基百科 / 维基文库全文：抓取、分页、逐页渲染，返回 (图片路径列表, 词条信息, 发出的页数, 没发出的页数)。"""
         page_chars = _int(self.config.get("full_page_chars", 3500), 3500, 1000, 8000)
         max_pages = _int(self.config.get("full_max_pages", 15), 15, 1, 40)
         timeout = _int(self.config.get("fetch_timeout", 12), 12, 3, 60)
-        async with fetchers.make_client(self.config.get("proxy") or None, timeout) as client:
+        async with fetchers.make_client(
+            self.config.get("proxy") or None, timeout
+        ) as client:
             if platform == "wikisource":
                 article = await fetchers.fetch_wikisource_full(client, url)
             else:
@@ -629,7 +872,11 @@ class LinkPreviewPlugin(Star):
         paths = []
         for no, blocks in enumerate(pages, 1):
             out = self.cache_dir / f"{stem}-{no:02d}.jpg"
-            paths.append(await self._render_page(article, blocks, no, len(pages), hidden, theme, out))
+            paths.append(
+                await self._render_page(
+                    article, blocks, no, len(pages), hidden, theme, out
+                )
+            )
         return paths, article, len(pages), hidden
 
     @filter.command("翻译", alias={"translate", "翻译帖子"})
@@ -641,7 +888,9 @@ class LinkPreviewPlugin(Star):
             if last:
                 links = [last]
         if not links:
-            yield event.plain_result("用法：/翻译 链接（也可以先发一次链接，再发 /翻译）")
+            yield event.plain_result(
+                "用法：/翻译 链接（也可以先发一次链接，再发 /翻译）"
+            )
             return
 
         async for res in self._preview(event, links[:1], quiet=False, translate=True):
@@ -650,20 +899,26 @@ class LinkPreviewPlugin(Star):
     @filter.command("全文", alias={"fulltext", "维基全文"})
     async def fulltext_cmd(self, event: AstrMessageEvent):
         """维基词条全文：按章节分页渲染，合并转发发出。"""
-        links = fetchers.find_links(self._message_text(event), {"wikipedia": True, "wikisource": True}, 1)
+        links = fetchers.find_links(
+            self._message_text(event), {"wikipedia": True, "wikisource": True}, 1
+        )
         if not links:
             last = self._last_link.get(event.unified_msg_origin)
             if last and last[0] in ("wikipedia", "wikisource"):
                 links = [last]
         if not links:
-            yield event.plain_result("用法：/全文 维基百科或维基文库链接（不带链接时用本群最近预览过的那条）")
+            yield event.plain_result(
+                "用法：/全文 维基百科或维基文库链接（不带链接时用本群最近预览过的那条）"
+            )
             return
         platform, url = links[0]
-        self._clean_cache()
+        await asyncio.to_thread(self._clean_cache)
         try:
             paths, article, total, hidden = await self._render_article(platform, url)
         except Blocked as e:
-            logger.info(f"[LinkPreview] 全文 {url} {'疑似不适宜内容' if isinstance(e, RestrictedBlocked) else '命中屏蔽词'}，已拦截")
+            logger.info(
+                f"[LinkPreview] 全文 {url} {'疑似不适宜内容' if isinstance(e, RestrictedBlocked) else '命中屏蔽词'}，已拦截"
+            )
             yield event.plain_result(e.notice or BLOCK_NOTICE)
             return
         except Exception as e:
@@ -684,15 +939,22 @@ class LinkPreviewPlugin(Star):
         if article.get("byline"):
             head = head.replace("\n", f"\n{article['byline']}\n", 1)
         nodes = [Comp.Node(uin=bot, name=sender, content=[Comp.Plain(head)])]
-        nodes += [Comp.Node(uin=bot, name=sender, content=[Comp.Image.fromFileSystem(p)]) for p in paths]
+        nodes += [
+            Comp.Node(uin=bot, name=sender, content=[Comp.Image.fromFileSystem(p)])
+            for p in paths
+        ]
         if not await self._send_or_notice(event, [Comp.Nodes(nodes)]):
-            yield event.plain_result("全文发送失败（可能被 QQ 拦截了），请直接点链接查看。")
+            yield event.plain_result(
+                "全文发送失败（可能被 QQ 拦截了），请直接点链接查看。"
+            )
 
     def _links_from_command(self, event):
         text = self._message_text(event)
         everything = {k: True for k in fetchers.PLATFORMS}
-        links = fetchers.find_links(text, everything, 3)
+        links = fetchers.find_links(
+            text, everything, 3, self._web_blocklist(), self._extra_tlds()
+        )
         if links:
             return links
         # 不在已知平台列表里的网址按普通网页处理
-        return [("web", u.rstrip(".,;:!?)）】」")) for u in fetchers.URL_RE.findall(text)][:3]
+        return []

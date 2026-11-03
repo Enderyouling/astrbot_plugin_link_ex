@@ -2,7 +2,7 @@ name: astrbot_plugin_link_ex
 display_name: 外链解析 Ex
 short_desc: 群里发国内外平台链接，自动抓取内容画成卡片图片发回
 desc: 自动识别群聊里的 B站、抖音、小红书、微博、知乎、YouTube、TikTok、Instagram、X、GitHub、Reddit、Bluesky、pixiv、Steam、维基百科、维基文库、Dailymotion、niconico、Spotify 等国内外平台链接，抓取标题、作者、正文、配图、数据和热门评论，画成卡片图片发回群里；/评论 指令可单独查看评论，/全文 指令把维基百科词条、维基文库作品全文分页后合并转发。
-version: 3.0.0
+version: 3.0.1
 author: Enderyouling（EX版）；ネコの先生（原作）
 repo: https://github.com/Enderyouling/astrbot_plugin_link_ex
 astrbot_version: ">=4.16,<5"
