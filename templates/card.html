@@ -5,56 +5,86 @@
 <style>
   /* 内嵌字体：不依赖渲染机装了什么字体 */
   {{ font_css|safe }}
+  /* 配色取自看板娘：灰发、青色眼睛、黄色发卡、粉色耳朵 */
   :root {
-    --page: #0c0b16;
-    --card-a: #1d1a33;
-    --card-b: #141222;
-    --ink: #f4f1ff;
-    --ink-2: rgba(244, 241, 255, .78);
-    --muted: rgba(244, 241, 255, .5);
-    --line: rgba(255, 255, 255, .1);
-    --chip: rgba(255, 255, 255, .07);
+    --page: #10131c;
+    --card-a: #1d2331;
+    --card-b: #151a25;
+    --ink: #eef3fa;
+    --ink-2: rgba(238, 243, 250, .8);
+    --muted: rgba(238, 243, 250, .52);
+    --line: rgba(255, 255, 255, .09);
+    --chip: rgba(255, 255, 255, .06);
+    --bubble: #232a3a;
+    --neko: #4cc3d6;
+    --clip: #f4b942;
+    --blush: #f3a6b8;
     --accent: {{ c.color }};
+    --glow: 20%;
   }
   body.light {
-    --page: #eef0f6;
+    --page: #edf0f5;
     --card-a: #ffffff;
-    --card-b: #f7f8fc;
-    --ink: #14161f;
-    --ink-2: rgba(20, 22, 31, .8);
-    --muted: rgba(20, 22, 31, .5);
-    --line: rgba(20, 22, 31, .1);
-    --chip: rgba(20, 22, 31, .05);
+    --card-b: #f6f8fb;
+    --ink: #1b2230;
+    --ink-2: rgba(27, 34, 48, .8);
+    --muted: rgba(27, 34, 48, .5);
+    --line: rgba(27, 34, 48, .09);
+    --chip: rgba(27, 34, 48, .045);
+    --bubble: #ffffff;
+    --neko: #1f9fb4;
+    --glow: 10%;
   }
-  /* 弯引号、省略号用西文字体，避免中文字体把英文里的引号排成全角 */
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* 页面底色必须是纯色：出图后按左上角颜色裁留白 */
   body {
     background: var(--page); color: var(--ink); width: 640px;
     font-family: "LP Sans", "Helvetica Neue", "Segoe UI", "DejaVu Sans", sans-serif, "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", "Noto Color Emoji";
-   
   }
   /* 文转图模式：远端 Chromium 视口固定 800×720 且忽略 full_page/DPR，
      让卡片铺满视口宽度，避免右侧一大片空白；高度由后面的裁边处理 */
   body.t2i { width: 800px; }
-  body.t2i #card { margin: 20px; }
+  .stage { position: relative; margin: 20px; }
+  .stage.has-neko { padding-top: 190px; }
+
+  /* 看板娘：图只到胸口，卡片盖住下半截，看起来像从卡片后面探出头 */
+  .neko { position: absolute; top: 0; right: 30px; width: 250px; z-index: 0;
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .28));
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 16px); mask-image: linear-gradient(180deg, transparent 0, #000 16px); }
+  .bubble { position: absolute; right: 296px; top: 80px; z-index: 2; max-width: 340px;
+    padding: 10px 16px; border-radius: 18px; background: var(--bubble); border: 1px solid var(--line);
+    font-size: 14px; font-weight: 700; line-height: 1.45; color: var(--ink);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .22); }
+  .bubble::after { content: ""; position: absolute; right: -7px; top: 50%; width: 13px; height: 13px; margin-top: -7px;
+    background: var(--bubble); border-right: 1px solid var(--line); border-top: 1px solid var(--line); transform: rotate(45deg); }
+  .bubble em { font-style: normal; color: var(--neko); }
+  .bubble small { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+  .paws { position: absolute; left: 18px; top: 40px; z-index: 0; color: var(--muted); opacity: .45; }
+  .paws svg { position: absolute; width: 22px; height: 22px; }
+
   #card {
-    position: relative; margin: 20px; overflow: hidden;
-    border-radius: 24px; border: 1px solid var(--line);
+    position: relative; z-index: 1; overflow: hidden;
+    border-radius: 26px; border: 1px solid var(--line);
     background:
-      radial-gradient(ellipse 70% 45% at 100% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+      radial-gradient(ellipse 70% 45% at 100% 0%, color-mix(in srgb, var(--accent) var(--glow), transparent), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 0% 100%, color-mix(in srgb, var(--neko) 10%, transparent), transparent 70%),
       linear-gradient(180deg, var(--card-a), var(--card-b));
-    box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .32);
   }
-  #card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 30%, transparent)); }
-  .inner { padding: 22px 24px 18px; }
+  #card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; z-index: 2;
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 40%, var(--neko)), transparent); }
+  /* 右下角一只淡淡的大爪印 */
+  .mark { position: absolute; right: -22px; bottom: 26px; width: 150px; height: 150px; color: var(--ink); opacity: .025; z-index: 0; transform: rotate(-18deg); }
+  .inner { position: relative; z-index: 1; padding: 22px 24px 18px; }
 
   .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-  .badge { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 100px; background: var(--chip); border: 1px solid var(--line); font-size: 13px; font-weight: 700; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; padding: 5px 13px 5px 5px; border-radius: 100px; background: var(--chip); border: 1px solid var(--line); font-size: 13px; font-weight: 700; }
   .badge i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 12px; font-weight: 900; color: #fff; background: var(--accent); }
   .domain { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
 
   .author { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-  .avatar { width: 46px; height: 46px; border-radius: 50%; flex: none; object-fit: cover; background: var(--chip); border: 2px solid var(--line); }
+  .avatar { width: 46px; height: 46px; border-radius: 50%; flex: none; object-fit: cover; background: var(--chip);
+    border: 2px solid color-mix(in srgb, var(--neko) 45%, transparent); }
   .avatar.letter { display: grid; place-items: center; font-size: 19px; font-weight: 800; color: #fff; border: none;
     background: linear-gradient(145deg, var(--accent), color-mix(in srgb, var(--accent) 45%, #000)); }
   .who { min-width: 0; flex: 1; }
@@ -65,21 +95,22 @@
   .note { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 8px; margin-bottom: 10px;
     color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
   .note.warn { color: #ffb4a8; background: rgba(255, 122, 107, .12); border-color: rgba(255, 122, 107, .35); }
+  body.light .note.warn { color: #c2402f; }
   h1 { font-size: 21px; line-height: 1.4; font-weight: 800; margin-bottom: 8px; word-break: break-word; }
-  .text { font-size: 15.5px; line-height: 1.7; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
+  .text { font-size: 15.5px; line-height: 1.72; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
   /* 译文：和原文隔开，左侧一条竖线，标个「译」 */
   .trans { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--chip);
-    border-left: 3px solid var(--accent); font-size: 14.5px; line-height: 1.7;
+    border-left: 3px solid var(--neko); font-size: 14.5px; line-height: 1.7;
     color: var(--ink); white-space: pre-wrap; word-break: break-word; }
   .trans::before { content: "译"; display: inline-block; margin-right: 8px; padding: 1px 6px;
-    border-radius: 6px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 800;
+    border-radius: 6px; background: var(--neko); color: #fff; font-size: 11px; font-weight: 800;
     vertical-align: 1px; }
 
   .quote { margin-top: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--chip); }
   .quote b { display: block; font-size: 13px; margin-bottom: 4px; }
   .quote p { font-size: 14px; line-height: 1.6; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
 
-  .media { margin-top: 14px; display: grid; gap: 6px; border-radius: 16px; overflow: hidden; position: relative; }
+  .media { margin-top: 14px; display: grid; gap: 6px; border-radius: 18px; overflow: hidden; position: relative; border: 1px solid var(--line); }
   .media img { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--chip); }
   .media.n1 img { max-height: 380px; height: auto; }
   .media.n2 { grid-template-columns: 1fr 1fr; height: 240px; }
@@ -88,7 +119,7 @@
   .media.n4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 320px; }
   /* 竖图（手机截图那种 1:2）：改成纵向堆叠，整张显示。
      多图网格用的是 object-fit: cover + 固定高度，竖图会被上下裁掉。 */
-  .media.stack { display: flex; flex-direction: column; gap: 6px; height: auto; }
+  .media.stack { display: flex; flex-direction: column; gap: 6px; height: auto; border: none; }
   .media.stack img { width: auto; max-width: 100%; max-height: 520px; margin: 0 auto; object-fit: contain; }
   .media.blur img { filter: blur(26px) saturate(.6); transform: scale(1.15); }
   .veil { position: absolute; inset: 0; display: grid; place-items: center; font-size: 15px; font-weight: 800; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
@@ -98,7 +129,8 @@
   .dur { position: absolute; right: 10px; bottom: 10px; padding: 3px 8px; border-radius: 7px; background: rgba(0, 0, 0, .72); color: #fff; font-size: 12.5px; font-weight: 700; }
 
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-  .tags span { font-size: 12px; padding: 3px 10px; border-radius: 100px; background: var(--chip); border: 1px solid var(--line); color: var(--ink-2); }
+  .tags span { font-size: 12px; padding: 3px 10px; border-radius: 100px; background: color-mix(in srgb, var(--neko) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--neko) 25%, transparent); color: var(--ink-2); }
 
   .stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
   .stats div { padding: 7px 12px; border-radius: 12px; background: var(--chip); border: 1px solid var(--line); }
@@ -106,21 +138,35 @@
   .stats b { font-size: 14px; }
 
   .comments { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); }
-  .comments .ch { font-size: 12.5px; font-weight: 800; color: var(--muted); letter-spacing: .08em; margin-bottom: 10px; }
-  .cm { padding: 10px 12px; border-radius: 12px; background: var(--chip); border: 1px solid var(--line); }
+  .comments .ch { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--muted); letter-spacing: .08em; margin-bottom: 10px; }
+  .comments .ch svg { width: 14px; height: 14px; color: var(--blush); }
+  .cm { padding: 10px 12px; border-radius: 14px; background: var(--chip); border: 1px solid var(--line); }
   .cm + .cm { margin-top: 8px; }
   .cm .row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
   .cm .row b { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
   .cm .row em { font-style: normal; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
   .cm .row .lk { margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; }
   .cm p { font-size: 14px; line-height: 1.6; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
-  .foot { display: flex; justify-content: space-between; gap: 12px; padding: 12px 24px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); }
+  .foot { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px;
+    border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); }
   .foot .url { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .foot .brand { white-space: nowrap; }
+  .foot .brand { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 700; }
+  .foot .brand svg { width: 14px; height: 14px; color: var(--clip); }
 </style>
 </head>
 <body class="{{ theme }}{% if t2i %} t2i{% endif %}">
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="paw" viewBox="0 0 24 24"><g fill="currentColor"><ellipse cx="12" cy="16.2" rx="5.4" ry="4.6"/><ellipse cx="5.2" cy="10.4" rx="2.3" ry="2.9"/><ellipse cx="9.4" cy="6.2" rx="2.3" ry="2.9"/><ellipse cx="14.6" cy="6.2" rx="2.3" ry="2.9"/><ellipse cx="18.8" cy="10.4" rx="2.3" ry="2.9"/></g></symbol>
+</svg>
+<div class="stage{% if mascot %} has-neko{% endif %}">
+  {% if mascot %}
+  <div class="paws"><svg style="left:0;top:64px;transform:rotate(-24deg)"><use href="#paw"/></svg><svg style="left:30px;top:24px;transform:rotate(-8deg)"><use href="#paw"/></svg><svg style="left:68px;top:0;transform:rotate(10deg);opacity:.6"><use href="#paw"/></svg></div>
+  <div class="bubble">喵～ 帮你看了这条 <em>{{ c.platform_name }}</em>
+    <small>{% if c.comments_mode %}评论都在下面啦{% elif c.video %}是视频哦，封面在下面{% elif c.images %}配图也一起带上了{% else %}内容整理在下面{% endif %}</small></div>
+  <img class="neko" src="{{ mascot }}">
+  {% endif %}
 <div id="card">
+  <svg class="mark"><use href="#paw"/></svg>
   <div class="inner">
     <div class="head">
       <span class="badge"><i>{{ c.icon }}</i>{{ c.platform_name }}</span>
@@ -157,7 +203,7 @@
 
     {% if c.comments %}
     <div class="comments">
-      <div class="ch">{{ '评论' if c.comments_mode else '热门评论' }} · {{ c.comments|length }} 条</div>
+      <div class="ch"><svg><use href="#paw"/></svg>{{ '评论' if c.comments_mode else '热门评论' }} · {{ c.comments|length }} 条</div>
       {% for cm in c.comments %}
       <div class="cm">
         <div class="row"><b>{{ cm.author or '匿名' }}</b>{% if cm.time %}<em>{{ cm.time }}</em>{% endif %}{% if cm.likes %}<span class="lk">赞 {{ cm.likes }}</span>{% endif %}</div>
@@ -169,7 +215,8 @@
     <div class="comments"><div class="ch">评论</div><div class="cm"><p>{{ c.no_comments_reason or '这个链接拿不到评论' }}</p></div></div>
     {% endif %}
   </div>
-  <div class="foot"><span class="url">{{ c.short_url }}</span><span class="brand">Neko · 链接预览</span></div>
+  <div class="foot"><span class="url">{{ c.short_url }}</span><span class="brand"><svg><use href="#paw"/></svg>Neko · 链接预览</span></div>
+</div>
 </div>
 </body>
 </html>

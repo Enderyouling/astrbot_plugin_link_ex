@@ -7,23 +7,38 @@
   {{ font_css|safe }}
   /* 维基全文的一页，和 card.html 同一套样式 */
   :root {
-    --page: #0c0b16; --card-a: #1d1a33; --card-b: #141222;
-    --ink: #f4f1ff; --ink-2: rgba(244, 241, 255, .82); --muted: rgba(244, 241, 255, .5);
-    --line: rgba(255, 255, 255, .1); --chip: rgba(255, 255, 255, .07); --accent: #c8ccd1;
+    --page: #10131c; --card-a: #1d2331; --card-b: #151a25;
+    --ink: #eef3fa; --ink-2: rgba(238, 243, 250, .82); --muted: rgba(238, 243, 250, .52);
+    --line: rgba(255, 255, 255, .09); --chip: rgba(255, 255, 255, .06); --accent: #c8ccd1;
+    --bubble: #232a3a; --neko: #4cc3d6; --clip: #f4b942;
   }
   body.light {
-    --page: #eef0f6; --card-a: #ffffff; --card-b: #f7f8fc;
-    --ink: #14161f; --ink-2: rgba(20, 22, 31, .82); --muted: rgba(20, 22, 31, .5);
-    --line: rgba(20, 22, 31, .1); --chip: rgba(20, 22, 31, .05); --accent: #54595d;
+    --page: #edf0f5; --card-a: #ffffff; --card-b: #f6f8fb;
+    --ink: #1b2230; --ink-2: rgba(27, 34, 48, .82); --muted: rgba(27, 34, 48, .5);
+    --line: rgba(27, 34, 48, .09); --chip: rgba(27, 34, 48, .045); --accent: #54595d;
+    --bubble: #ffffff; --neko: #1f9fb4;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--page); color: var(--ink); width: 680px;
     font-family: "LP Sans", "Helvetica Neue", "Segoe UI", "DejaVu Sans", sans-serif, "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", "Noto Color Emoji"; }
   body.t2i { width: 800px; }
-  body.t2i #card { margin: 20px; }
-  #card { position: relative; margin: 20px; overflow: hidden; border-radius: 24px; border: 1px solid var(--line);
-    background: linear-gradient(180deg, var(--card-a), var(--card-b)); box-shadow: 0 18px 50px rgba(0, 0, 0, .35); }
-  #card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(90deg, var(--accent), transparent); }
+  .stage { position: relative; margin: 20px; }
+  /* 看板娘从卡片后面探出头，和 card.html 同一套 */
+  .stage.has-neko { padding-top: 190px; }
+  .neko { position: absolute; top: 0; right: 30px; width: 250px; z-index: 0; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .28));
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 16px); mask-image: linear-gradient(180deg, transparent 0, #000 16px); }
+  .bubble { position: absolute; right: 296px; top: 80px; z-index: 2; max-width: 340px; padding: 10px 16px; border-radius: 18px;
+    background: var(--bubble); border: 1px solid var(--line); font-size: 14px; font-weight: 700; line-height: 1.45; color: var(--ink);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .22); }
+  .bubble::after { content: ""; position: absolute; right: -7px; top: 50%; width: 13px; height: 13px; margin-top: -7px;
+    background: var(--bubble); border-right: 1px solid var(--line); border-top: 1px solid var(--line); transform: rotate(45deg); }
+  .bubble em { font-style: normal; color: var(--neko); }
+  .bubble small { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+  #card { position: relative; z-index: 1; overflow: hidden; border-radius: 26px; border: 1px solid var(--line);
+    background: radial-gradient(ellipse 60% 40% at 0% 100%, color-mix(in srgb, var(--neko) 9%, transparent), transparent 70%),
+      linear-gradient(180deg, var(--card-a), var(--card-b));
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .32); }
+  #card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(90deg, var(--neko), var(--accent), transparent); }
   .inner { padding: 22px 26px 20px; }
   .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
   .badge { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 100px; background: var(--chip); border: 1px solid var(--line); font-size: 13px; font-weight: 700; }
@@ -35,7 +50,7 @@
   .lead { margin: 14px 0 4px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--chip); }
   .lead img { display: block; width: 100%; max-height: 360px; object-fit: contain; }
   .sec { margin-top: 18px; }
-  .sec h2 { font-size: 19px; font-weight: 800; padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 10px; font-family: "Noto Serif CJK SC", Georgia, serif; }
+  .sec h2 { font-size: 19px; font-weight: 800; padding: 0 0 6px 12px; border-bottom: 1px solid var(--line); border-left: 3px solid var(--neko); margin-bottom: 10px; font-family: "Noto Serif CJK SC", Georgia, serif; }
   .sec h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
   .sec h4, .sec h5, .sec h6 { font-size: 14.5px; font-weight: 800; color: var(--ink-2); margin-bottom: 6px; }
   .sec p { font-size: 15px; line-height: 1.8; color: var(--ink-2); word-break: break-word; }
@@ -43,10 +58,20 @@
   .more { margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: var(--chip); border: 1px dashed var(--line); font-size: 13.5px; color: var(--muted); }
   .foot { display: flex; justify-content: space-between; gap: 12px; padding: 12px 26px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); }
   .foot .url { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .foot .brand { white-space: nowrap; }
+  .foot .brand { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 700; }
+  .foot .brand svg { width: 14px; height: 14px; color: var(--clip); }
 </style>
 </head>
 <body class="{{ theme }}{% if t2i %} t2i{% endif %}">
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="paw" viewBox="0 0 24 24"><g fill="currentColor"><ellipse cx="12" cy="16.2" rx="5.4" ry="4.6"/><ellipse cx="5.2" cy="10.4" rx="2.3" ry="2.9"/><ellipse cx="9.4" cy="6.2" rx="2.3" ry="2.9"/><ellipse cx="14.6" cy="6.2" rx="2.3" ry="2.9"/><ellipse cx="18.8" cy="10.4" rx="2.3" ry="2.9"/></g></symbol>
+</svg>
+<div class="stage{% if mascot %} has-neko{% endif %}">
+  {% if mascot %}
+  <div class="bubble">{% if no == 1 %}喵～ <em>{{ a.title|truncate(16, True, '…', 0) }}</em> 的全文{% else %}接着看 <em>第 {{ no }} 页</em>{% endif %}
+    <small>一共 {{ total }} 页，慢慢读喵</small></div>
+  <img class="neko" src="{{ mascot }}">
+  {% endif %}
 <div id="card">
   <div class="inner">
     <div class="head">
@@ -74,7 +99,8 @@
     <div class="more">还有 {{ hidden }} 页内容没有发出，完整词条请看原文。</div>
     {% endif %}
   </div>
-  <div class="foot"><span class="url">{{ a.short_url }}</span><span class="brand">Neko · {{ a.brand or '维基全文' }}</span></div>
+  <div class="foot"><span class="url">{{ a.short_url }}</span><span class="brand"><svg><use href="#paw"/></svg>Neko · {{ a.brand or '维基全文' }}</span></div>
+</div>
 </div>
 </body>
 </html>
