@@ -43,7 +43,7 @@
 <table>
   <tr>
     <td width="190" align="center">
-      <img width="170" alt="Link Preview logo" src="docs/images/logo.png" style="border-radius: 24px;" />
+      <img width="170" alt="外链解析 Ex 图标" src="https://raw.githubusercontent.com/Enderyouling/astrbot_plugin_link_ex/EX-main/logo.png" style="border-radius: 24px;" />
     </td>
     <td>
       <strong>外链解析 · Ex</strong><br />
