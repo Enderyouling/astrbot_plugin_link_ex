@@ -1,11 +1,17 @@
 # 外链解析 Ex | astrbot_plugin_link_ex
 
-**EX 版维护：[@Enderyouling](https://github.com/Enderyouling)** · **当前版本：3.0.1**
+**EX 版维护：[@Enderyouling](https://github.com/Enderyouling)** · **当前版本：3.0.2**
 
 基于 [EndermanMYR/astrbot_plugin_link_preview](https://github.com/EndermanMYR/astrbot_plugin_link_preview) v2.5.0 的 AstrBot 扩展版本。EX 版新增国内平台预览并加强网络请求安全检查，原作署名与 MIT 许可证保留。
 
-[下载 v3.0.1](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.1) · [更新记录](CHANGELOG.md) · [向原作提交的 PR](https://github.com/EndermanMYR/astrbot_plugin_link_preview/pull/2)
+[下载 v3.0.2](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.2) · [更新记录](CHANGELOG.md) · [向原作提交的 PR](https://github.com/EndermanMYR/astrbot_plugin_link_preview/pull/2)
 
+
+## 3.0.2 更新
+
+- 新增 Ex 专属图标，放置于根目录 `logo.png`，供 AstrBot 插件市场与本地插件列表识别。
+- 文档图标引用改用完整地址，兼容商店文档页面。图标由 imagegen 辅助生成。
+- 本次仅更新图标、文档及版本元数据；插件运行逻辑沿用 3.0.1。
 
 ## 3.0.1 更新
 
@@ -130,7 +136,7 @@
 
 ## 📦 安装 | Installation
 
-从本仓库的 [v3.0.1 发行页](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.1) 下载源码 ZIP，或在 AstrBot 中使用本仓库地址安装。默认维护分支为 `EX-main`。
+从本仓库的 [v3.0.2 发行页](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.2) 下载源码 ZIP，或在 AstrBot 中使用本仓库地址安装。默认维护分支为 `EX-main`。
 
 插件显示名为 **外链解析 Ex**，插件 ID 与仓库名统一为 `astrbot_plugin_link_ex`。从原版切换前请备份配置与数据，并停用原版，避免相同命令和自动预览重复触发。新 ID 使用独立配置与数据目录，不会自动导入旧配置；请在 WebUI 重新填写或导入原配置。需要保留自定义词表和群图片开关时，在停用两版后，将旧目录 `data/plugin_data/astrbot_plugin_link_preview/` 中的自定义词表及 `image_switch.json` 复制到新目录 `data/plugin_data/astrbot_plugin_link_ex/`；目标已有文件时先备份并核对，不要直接覆盖。
 

@@ -1,3 +1,12 @@
+# 3.0.2 — Ex 专属图标
+
+- 新增蓝色预览卡片、青色链接与 Ex 标识的图标（imagegen 辅助生成）。
+- 根目录新增 `logo.png`，修复 AstrBot 插件商店显示默认图标的问题。
+- README 使用完整图标地址，兼容商店文档页面。
+- 插件运行逻辑、配置和数据目录沿用 3.0.1。
+
+---
+
 # 3.0.1 — 上游同步、安全与性能更新
 
 维护者：Enderyouling（EX 版）。参考并移植 [原作截至 6fbbaf9（3.1.0）的更新](https://github.com/EndermanMYR/astrbot_plugin_link_preview/commit/6fbbaf9)，保留原作与 MIT 署名。
