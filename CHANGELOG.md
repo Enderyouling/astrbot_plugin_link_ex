@@ -1,3 +1,11 @@
+# 3.0.3 — 代理 Fake-IP 兼容
+
+- 兼容 Clash 等代理/TUN 的 Fake-IP DNS：通过固定公网 IP 的 Cloudflare 或 Google DNS-over-HTTPS 查询真实 A/AAAA 地址，再继续公网校验与 IP 固定连接。
+- 增加 DoH 超时、响应大小上限、缓存和第二解析器回退；仍拒绝内网、组播、特殊 IPv6、压缩/超大响应和恶意跳转。
+- README 补充 EX 图标引用、国内平台说明与自有仓库 PR 链接。
+
+---
+
 # 3.0.2 — Ex 专属图标
 
 - 新增蓝色预览卡片、青色链接与 Ex 标识的图标（imagegen 辅助生成）。
