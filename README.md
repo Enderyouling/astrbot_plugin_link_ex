@@ -1,11 +1,17 @@
 # 外链解析 Ex | astrbot_plugin_link_ex
 
-**EX 版维护：[@Enderyouling](https://github.com/Enderyouling)** · **当前版本：3.0.2**
+![外链解析 Ex](logo.png)
+
+**EX 版维护：[@Enderyouling](https://github.com/Enderyouling)** · **当前版本：3.0.3**
 
 基于 [EndermanMYR/astrbot_plugin_link_preview](https://github.com/EndermanMYR/astrbot_plugin_link_preview) v2.5.0 的 AstrBot 扩展版本。EX 版新增国内平台预览并加强网络请求安全检查，原作署名与 MIT 许可证保留。
 
-[下载 v3.0.2](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.2) · [更新记录](CHANGELOG.md) · [向原作提交的 PR](https://github.com/EndermanMYR/astrbot_plugin_link_preview/pull/2)
+[下载 v3.0.3](https://github.com/Enderyouling/astrbot_plugin_link_ex/releases/tag/v3.0.3) · [更新记录](CHANGELOG.md) · [本仓库 PR #1](https://github.com/Enderyouling/astrbot_plugin_link_ex/pull/1)
 
+## 3.0.3 更新
+
+- 兼容 Clash 等代理/TUN 的 Fake-IP DNS：通过固定公网 IP 的 Cloudflare 或 Google DNS-over-HTTPS 查询真实 A/AAAA 地址，再继续公网校验与 IP 固定连接。
+- 增加 DoH 超时、响应大小上限、缓存和第二解析器回退；内网、组播、特殊 IPv6、压缩/超大响应和恶意跳转仍会被拒绝。
 
 ## 3.0.2 更新
 
@@ -34,7 +40,7 @@
 >
 > B站支持 BV/av 视频及 b23.tv 短链，读取标题、UP主、封面、时长及互动数。其余四个平台读取公开分享页的标题、简介、封面；抖音和小红书支持常见分享短链。不是完整 App 内容抓取，不支持登录后内容、验证码绕过或国内平台评论。平台仅返回登录/验证页时会明确失败；页面结构和网络风控可能影响可用性。
 >
-> 网络安全：预览和配图仅访问解析到公网 IP 的 HTTP(S) 地址，每次连接（含跳转）固定已验证 IP；不自动使用环境代理，仍支持配置项 proxy。Fake-IP DNS（例如部分 TUN 模式）会被拒绝，需对这些域名使用真实 DNS。管理员配置的 X 内网服务使用独立客户端，不受公网限制。GitHub 私有仓库被拒绝；图片只允许常见位图类型，并在读取时限制大小。正文响应上限 8 MiB。
+> 网络安全：预览和配图仅访问解析到公网 IP 的 HTTP(S) 地址，每次连接（含跳转）固定已验证 IP；不自动使用环境代理，仍支持配置项 proxy。检测到 Fake-IP DNS（例如部分 TUN 模式）时，会通过固定公网 IP 的 DNS-over-HTTPS 查询真实地址，仍拒绝内网地址。管理员配置的 X 内网服务使用独立客户端，不受公网限制。GitHub 私有仓库被拒绝；图片只允许常见位图类型，并在读取时限制大小。正文响应上限 8 MiB。
 >
 > 新增平台可在 platforms 中分别关闭。X 预览不再使用登录态正文降级；评论只采用公开接口能读取的内容，公开接口不可用时会减少评论。正文响应只接受未压缩传输，拒绝不遵守 Accept-Encoding: identity 的响应，以防解压膨胀；这可能影响少数站点。原版配置与数据不会自动迁移，切换步骤见安装说明。
 

@@ -144,7 +144,6 @@ class NetworkTests(unittest.IsolatedAsyncioTestCase):
             "169.254.169.254",
             "::1",
             "fc00::1",
-            "198.18.0.1",
             "224.0.0.1",
             "ff02::1",
         ):
